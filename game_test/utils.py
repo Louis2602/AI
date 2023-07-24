@@ -35,9 +35,6 @@ def draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall):
     _to = (24, 14)
     path_array = pacman_game.p.get_path(_from[1], _from[0], _to[1], _to[0])
 
-    print(path_array)
-    # [(1, 2), (1, 3), (1, 4), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (6, 6), (6, 7) ...
-
     white = (255, 255, 255)
     for path in path_array:
         game_renderer.add_game_object(
@@ -57,3 +54,4 @@ def draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall):
             game_renderer, to_translated[0], to_translated[1], unified_size, green
         )
     )
+    return path_array

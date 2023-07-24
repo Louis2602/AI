@@ -16,7 +16,8 @@ if __name__ == "__main__":
                 game_renderer.add_wall(Wall(game_renderer, x, y, unified_size))
 
     # Draw path
-    draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall)
+    path_array = draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall)
+    print(path_array)
 
     for cookie_space in pacman_game.cookie_spaces:
         translated = translate_maze_to_screen(cookie_space)

@@ -160,6 +160,7 @@ class Hero(MovableObject):
         if not desired_position_collides:
             self.last_working_direction = self.current_direction
             desired_position = collision_result[1]
+            print(desired_position)
             self.set_position(desired_position[0], desired_position[1])
         else:
             self.current_direction = self.last_working_direction
@@ -493,6 +494,8 @@ class GameRenderer:
         pressed = pygame.key.get_pressed()
         if self._hero is None:
             return
+
+        # Movement
         if pressed[pygame.K_UP]:
             self._hero.set_direction(Direction.UP)
         elif pressed[pygame.K_LEFT]:
