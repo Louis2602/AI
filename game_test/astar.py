@@ -12,8 +12,8 @@ def get_neighbors(pos, maze):
         if (
             0 <= x < len(maze)
             and 0 <= y < len(maze[0])
-            and maze[x][y] == 0
-            or maze[x][y] == 2
+            and (maze[x][y] == 0
+            or maze[x][y] == 2)
         ):
             neighbors.append((x, y))
 

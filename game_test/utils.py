@@ -31,9 +31,9 @@ def translate_maze_to_screen(in_coords, in_size=32):
 def draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall):
     red = (255, 0, 0)
     green = (0, 255, 0)
-    white = (255, 255, 255)
+    white = (80, 80, 80)
     _from = (1, 1)
-    _to = (10, 10)
+    _to = (14, 24)
 
     path_array = pacman_game.p.get_path_a_star(_from, _to)
 
@@ -45,7 +45,11 @@ def draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall):
     from_translated = translate_maze_to_screen(_from)
     game_renderer.add_game_object(
         GameObject(
-            game_renderer, from_translated[0], from_translated[1], unified_size, red
+            game_renderer,
+            from_translated[0],
+            from_translated[1],
+            unified_size,
+            red,
         )
     )
 

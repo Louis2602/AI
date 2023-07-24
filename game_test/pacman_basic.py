@@ -224,6 +224,7 @@ class Hero(MovableObject):
         self.handle_cookie_pickup()
 
     def automatic_move(self, in_direction: Direction):
+        print(in_direction)
         collision_result = self.check_collision_in_direction(in_direction)
 
         desired_position_collides = collision_result[0]

@@ -28,7 +28,7 @@ if __name__ == "__main__":
                 game_renderer.add_wall(Wall(game_renderer, x, y, unified_size))
 
     # Draw path
-    path_array = draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall)
+    # path_array = draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall)
 
     for cookie_space in pacman_game.cookie_spaces:
         translated = translate_maze_to_screen(cookie_space)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         )
         game_renderer.add_ghost(ghost)
 
-    pacman = Hero(game_renderer, unified_size, unified_size, unified_size)
+    pacman = Hero(game_renderer, pacman_game, unified_size, unified_size, unified_size)
     game_renderer.add_hero(pacman)
     game_renderer.set_current_mode(GhostBehaviour.CHASE)
     game_renderer.tick(120)
