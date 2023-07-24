@@ -326,22 +326,8 @@ class PacmanGameController:
             "XXXXXX XX          XX XXXXXX",
             "XXXXXX XX XXXXXXXX XX XXXXXX",
             "XXXXXX XX X   G  X XX XXXXXX",
-            "          X G    X          ",
+            "G         X G    X          ",
             "XXXXXX XX X   G  X XX XXXXXX",
-            "XXXXXX XX XXXXXXXX XX XXXXXX",
-            "XXXXXX XX          XX XXXXXX",
-            "XXXXXX XX XXXXXXXX XX XXXXXX",
-            "XXXXXX XX XXXXXXXX XX XXXXXX",
-            "X            XX            X",
-            "X XXXX XXXXX XX XXXXX XXXX X",
-            "X XXXX XXXXX XX XXXXX XXXX X",
-            "X   XX       G        XX   X",
-            "XXX XX XX XXXXXXXX XX XX XXX",
-            "XXX XX XX XXXXXXXX XX XX XXX",
-            "X      XX    XX    XX      X",
-            "X XXXXXXXXXX XX XXXXXXXXXX X",
-            "X XXXXXXXXXX XX XXXXXXXXXX X",
-            "X                          X",
             "XXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         ]
 
@@ -362,7 +348,6 @@ class PacmanGameController:
     def request_new_random_path(self, in_ghost: Ghost):
         random_space = random.choice(self.reachable_spaces)
         current_maze_coord = translate_screen_to_maze(in_ghost.get_position())
-
         path = self.p.get_path(
             current_maze_coord[1],
             current_maze_coord[0],
@@ -370,6 +355,7 @@ class PacmanGameController:
             random_space[0],
         )
         test_path = [translate_maze_to_screen(item) for item in path]
+        print(test_path)
         in_ghost.set_new_path(test_path)
 
     def convert_maze_to_numpy(self):

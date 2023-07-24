@@ -160,7 +160,6 @@ class Hero(MovableObject):
         if not desired_position_collides:
             self.last_working_direction = self.current_direction
             desired_position = collision_result[1]
-            print(desired_position)
             self.set_position(desired_position[0], desired_position[1])
         else:
             self.current_direction = self.last_working_direction
@@ -168,7 +167,6 @@ class Hero(MovableObject):
     def handle_cookie_pickup(self):
         collision_rect = pygame.Rect(self.x, self.y, self._size, self._size)
         cookies = self._renderer.get_cookies()
-        powerups = self._renderer.get_powerups()
         game_objects = self._renderer.get_game_objects()
         cookie_to_remove = None
         for cookie in cookies:
@@ -184,14 +182,6 @@ class Hero(MovableObject):
         if len(self._renderer.get_cookies()) == 0:
             self._renderer.set_won()
 
-        for powerup in powerups:
-            collides = collision_rect.colliderect(powerup.get_shape())
-            if collides and powerup in game_objects:
-                if not self._renderer.is_kokoro_active():
-                    game_objects.remove(powerup)
-                    self._renderer.add_score(ScoreType.POWERUP)
-                    self._renderer.activate_kokoro()
-
     def handle_ghosts(self):
         collision_rect = pygame.Rect(self.x, self.y, self._size, self._size)
         ghosts = self._renderer.get_ghosts()
@@ -199,12 +189,8 @@ class Hero(MovableObject):
         for ghost in ghosts:
             collides = collision_rect.colliderect(ghost.get_shape())
             if collides and ghost in game_objects:
-                if self._renderer.is_kokoro_active():
-                    game_objects.remove(ghost)
-                    self._renderer.add_score(ScoreType.GHOST)
-                else:
-                    if not self._renderer.get_won():
-                        self._renderer.kill_pacman()
+                if not self._renderer.get_won():
+                    self._renderer.kill_pacman()
 
     def draw(self):
         half_size = self._size / 2
@@ -226,7 +212,6 @@ class Ghost(MovableObject):
         super().__init__(in_surface, x, y, in_size)
         self.game_controller = in_game_controller
         self.sprite_normal = pygame.image.load(sprite_path)
-        self.sprite_fright = pygame.image.load("images/ghost_fright.png")
 
     def reached_target(self):
         if (self.x, self.y) == self.next_target:
@@ -240,10 +225,7 @@ class Ghost(MovableObject):
 
     def calculate_direction_to_next_target(self) -> Direction:
         if self.next_target is None:
-            if (
-                self._renderer.get_current_mode() == GhostBehaviour.CHASE
-                and not self._renderer.is_kokoro_active()
-            ):
+            if self._renderer.get_current_mode() == GhostBehaviour.CHASE:
                 self.request_path_to_player(self)
             else:
                 self.game_controller.request_new_random_path(self)
@@ -256,10 +238,7 @@ class Ghost(MovableObject):
         if diff_y == 0:
             return Direction.LEFT if diff_x < 0 else Direction.RIGHT
 
-        if (
-            self._renderer.get_current_mode() == GhostBehaviour.CHASE
-            and not self._renderer.is_kokoro_active()
-        ):
+        if self._renderer.get_current_mode() == GhostBehaviour.CHASE:
             self.request_path_to_player(self)
         else:
             self.game_controller.request_new_random_path(self)
@@ -270,12 +249,13 @@ class Ghost(MovableObject):
             in_ghost._renderer.get_hero_position()
         )
         current_maze_coord = translate_screen_to_maze(in_ghost.get_position())
-        path = self.game_controller.p.get_path(
-            current_maze_coord[1],
-            current_maze_coord[0],
-            player_position[1],
-            player_position[0],
+        print("CUR", current_maze_coord)
+        print("PLAYER", player_position)
+        # Chasing player mode
+        path = self.game_controller.p.get_path_a_star(
+            current_maze_coord, player_position
         )
+        print("PATH", path)
 
         new_path = [translate_maze_to_screen(item) for item in path]
         in_ghost.set_new_path(new_path)
@@ -291,22 +271,13 @@ class Ghost(MovableObject):
             self.set_position(self.x + 1, self.y)
 
     def draw(self):
-        self.image = (
-            self.sprite_fright
-            if self._renderer.is_kokoro_active()
-            else self.sprite_normal
-        )
+        self.image = self.sprite_normal
         super(Ghost, self).draw()
 
 
 class Cookie(GameObject):
     def __init__(self, in_surface, x, y):
         super().__init__(in_surface, x, y, 4, (255, 255, 0), True)
-
-
-class Powerup(GameObject):
-    def __init__(self, in_surface, x, y):
-        super().__init__(in_surface, x, y, 8, (255, 255, 255), True)
 
 
 class GameRenderer:
@@ -322,18 +293,14 @@ class GameRenderer:
         self._game_objects = []
         self._walls = []
         self._cookies = []
-        self._powerups = []
         self._ghosts = []
         self._hero: Hero = None
         self._lives = 3
         self._score = 0
         self._score_cookie_pickup = 10
         self._score_ghost_eaten = 400
-        self._score_powerup_pickup = 50
-        self._kokoro_active = False  # powerup, special ability
         self._current_mode = GhostBehaviour.SCATTER
         self._mode_switch_event = pygame.USEREVENT + 1  # custom event
-        self._kokoro_end_event = pygame.USEREVENT + 2
         self._pakupaku_event = pygame.USEREVENT + 3
         self._modes = [
             (7, 20),
@@ -391,9 +358,6 @@ class GameRenderer:
         )
         pygame.time.set_timer(self._mode_switch_event, used_timing * 1000)
 
-    def start_kokoro_timeout(self):
-        pygame.time.set_timer(self._kokoro_end_event, 15000)  # 15s
-
     def add_game_object(self, obj: GameObject):
         self._game_objects.append(obj)
 
@@ -405,15 +369,6 @@ class GameRenderer:
         self._game_objects.append(obj)
         self._ghosts.append(obj)
 
-    def add_powerup(self, obj: GameObject):
-        self._game_objects.append(obj)
-        self._powerups.append(obj)
-
-    def activate_kokoro(self):
-        self._kokoro_active = True
-        self.set_current_mode(GhostBehaviour.SCATTER)
-        self.start_kokoro_timeout()
-
     def set_won(self):
         self._won = True
 
@@ -424,7 +379,7 @@ class GameRenderer:
         self._score += in_score.value
 
     def get_hero_position(self):
-        return self._hero.get_position() if self._hero != None else (0, 0)
+        return self._hero.get_position() if self._hero != None else (1, 1)
 
     def set_current_mode(self, in_mode: GhostBehaviour):
         self._current_mode = in_mode
@@ -449,9 +404,6 @@ class GameRenderer:
         text_surface = font.render(text, False, (255, 255, 255))
         self._screen.blit(text_surface, in_position)
 
-    def is_kokoro_active(self):
-        return self._kokoro_active
-
     def add_wall(self, obj: Wall):
         self.add_game_object(obj)
         self._walls.append(obj)
@@ -464,9 +416,6 @@ class GameRenderer:
 
     def get_ghosts(self):
         return self._ghosts
-
-    def get_powerups(self):
-        return self._powerups
 
     def get_game_objects(self):
         return self._game_objects
@@ -482,9 +431,6 @@ class GameRenderer:
 
             if event.type == self._mode_switch_event:
                 self.handle_mode_switch()
-
-            if event.type == self._kokoro_end_event:
-                self._kokoro_active = False
 
             if event.type == self._pakupaku_event:
                 if self._hero is None:

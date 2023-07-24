@@ -1,11 +1,11 @@
 import random
 from search import Pathfinder
-from setup import Ghost
-from utils import translate_maze_to_screen, translate_screen_to_maze
+from graphics import Ghost
+from utils import translate_maze_to_screen, translate_screen_to_maze, get_maze
 
 
 class PacmanGameController:
-    def __init__(self):
+    def __init__(self, maze_name):
         # self.ascii_maze = [
         #     "XXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         #     "XP           XX            X",
@@ -39,29 +39,11 @@ class PacmanGameController:
         #     "X   O                 O    X",
         #     "XXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         # ]
-        self.ascii_maze = [
-            "XXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-            "XP           XX            X",
-            "X XXXX XXXXX XX XXXXX XXXX X",
-            "X XXXX XXXXX XX XXXXX XXXX X",
-            "X XXXX XXXXX XX XXXXX XXXX X",
-            "X                          X",
-            "X XXXX XX XXXXXXXX XX XXXX X",
-            "X XXXX XX XXXXXXXX XX XXXX X",
-            "X      XX    XX    XX      X",
-            "XXXXXX XXXXX XX XXXXX XXXXXX",
-            "XXXXXX XXXXX XX XXXXX XXXXXX",
-            "XXXXXX XX          XX XXXXXX",
-            "XXXXXX XX XXXXXXXX XX XXXXXX",
-            "XXXXXX XX X   G  X XX XXXXXX",
-            "          X G    X          ",
-            "XXXXXX XX X   G  X XX XXXXXX",
-            "XXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-        ]
+
+        self.maze, self.size, self.pacman_pos = get_maze(maze_name)
 
         self.numpy_maze = []
         self.cookie_spaces = []
-        self.powerup_spaces = []
         self.reachable_spaces = []
         self.ghost_spawns = []
         self.ghost_colors = [
@@ -70,38 +52,27 @@ class PacmanGameController:
             "images/ghost_orange.png",
             "images/ghost_blue.png",
         ]
-        self.size = (0, 0)
+        self.npsize = (0, 0)
         self.convert_maze_to_numpy()
-        self.p = Pathfinder(self.numpy_maze)
+        self.p = Pathfinder(self.maze)
 
     def request_new_random_path(self, in_ghost: Ghost):
         random_space = random.choice(self.reachable_spaces)
         current_maze_coord = translate_screen_to_maze(in_ghost.get_position())
-
-        path = self.p.get_path(
-            current_maze_coord[1],
-            current_maze_coord[0],
-            random_space[1],
-            random_space[0],
+        path = self.p.get_path_a_star(
+            current_maze_coord,
+            random_space,
         )
         test_path = [translate_maze_to_screen(item) for item in path]
         in_ghost.set_new_path(test_path)
 
     def convert_maze_to_numpy(self):
-        for x, row in enumerate(self.ascii_maze):
-            self.size = (len(row), x + 1)
-            binary_row = []
-            for y, column in enumerate(row):
-                if column == "G":
-                    self.ghost_spawns.append((y, x))
-
-                if column == "X":
-                    binary_row.append(0)
-                else:
-                    binary_row.append(1)
-                    self.cookie_spaces.append((y, x))
-                    self.reachable_spaces.append((y, x))
-                    if column == "O":
-                        self.powerup_spaces.append((y, x))
-
-            self.numpy_maze.append(binary_row)
+        for row in range(self.size[0]):
+            for column in range(self.size[1]):
+                if self.maze[row][column] == 0:
+                    self.reachable_spaces.append((row, column))
+                if self.maze[row][column] == 2:
+                    self.cookie_spaces.append((row, column))
+                    self.reachable_spaces.append((row, column))
+                if self.maze[row][column] == 3:
+                    self.ghost_spawns.append((row, column))
