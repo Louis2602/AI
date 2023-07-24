@@ -1,5 +1,5 @@
 import graphic
-import data
+from utils import get_elapsed_time
 import level12_astar
 import level12_bfs
 import tkinter as tk
@@ -16,7 +16,7 @@ def get_maze_path():
     return string
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     image_path = get_maze_path()
     level = int(input("Input level of game (1/2/3/4): "))
     speed = int(input("Input game speed (ms): "))
@@ -26,19 +26,16 @@ if __name__ == '__main__':
         start = time.time()
         pacman_path = level12_astar.A_star_run(image_path)
         monster_path = []
-        end = time.time()
-        execution_time = end - start
+        execution_time = get_elapsed_time(start, time.time())
 
     elif level == 3:
         start = time.time()
-        pacman_path, monster_path,finish_state = lvl3.level3(image_path)
-        end = time.time()
-        execution_time = end - start
+        pacman_path, monster_path, finish_state = lvl3.level3(image_path)
+        execution_time = get_elapsed_time(start, time.time())
     elif level == 4:
         start = time.time()
-        pacman_path, monster_path,finish_state=lvl4.level4(image_path)
-        end = time.time()
-        execution_time = end - start
+        pacman_path, monster_path, finish_state = lvl4.level4(image_path)
+        execution_time = get_elapsed_time(start, time.time())
 
     if not isinstance(pacman_path, bool):
         pacman_game.master.title("Pacman Game")
@@ -50,4 +47,4 @@ if __name__ == '__main__':
         print("Execution time is: ", execution_time)
         pacman_game.mainloop()
     else:
-        print('Cant find any path to get to the food') #only for level 1 and 2
+        print("Cant find any path to get to the food")  # only for level 1 and 2

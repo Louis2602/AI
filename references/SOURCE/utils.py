@@ -10,12 +10,15 @@ Ex maze:
     0 0 0 0
 --> maze[2][2] will be 3
 """
+
+
 def string_to_number(str):
-    return [int(i) for i in str] 
+    return [int(i) for i in str]
+
 
 def get_maze(filename):
-    f = open(filename, 'r')
-    maze, pos, size = [],[],[]
+    f = open(filename, "r")
+    maze, pos, size = [], [], []
     size = f.readline()
     temp = f.readlines()
     for index in range(len(temp)):
@@ -23,3 +26,7 @@ def get_maze(filename):
     pos = maze.pop(-1)
     size = string_to_number(size.split())
     return maze, size, pos
+
+
+def get_elapsed_time(start_time, end_time):
+    return end_time - start_time
