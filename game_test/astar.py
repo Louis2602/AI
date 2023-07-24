@@ -9,7 +9,12 @@ def get_neighbors(pos, maze):
 
     for dx, dy in directions:
         x, y = pos[0] + dx, pos[1] + dy
-        if 0 <= x < len(maze) and 0 <= y < len(maze[0]) and maze[x][y] == 0:
+        if (
+            0 <= x < len(maze)
+            and 0 <= y < len(maze[0])
+            and maze[x][y] == 0
+            or maze[x][y] == 2
+        ):
             neighbors.append((x, y))
 
     return neighbors

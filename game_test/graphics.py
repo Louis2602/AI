@@ -249,13 +249,10 @@ class Ghost(MovableObject):
             in_ghost._renderer.get_hero_position()
         )
         current_maze_coord = translate_screen_to_maze(in_ghost.get_position())
-        print("CUR", current_maze_coord)
-        print("PLAYER", player_position)
         # Chasing player mode
         path = self.game_controller.p.get_path_a_star(
             current_maze_coord, player_position
         )
-        print("PATH", path)
 
         new_path = [translate_maze_to_screen(item) for item in path]
         in_ghost.set_new_path(new_path)
