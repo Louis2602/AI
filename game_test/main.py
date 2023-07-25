@@ -1,4 +1,4 @@
-from game import Hero, Cookie, Wall, Ghost, GameRenderer, GameObject, Line
+from game import Hero, Cookie, Wall, Ghost, GameRenderer, GameObject
 from utils import GhostBehaviour, draw_path
 from controller import PacmanGameController
 from utils import translate_maze_to_screen, translate_screen_to_maze
@@ -52,15 +52,16 @@ if __name__ == "__main__":
     pacman = Hero(game_renderer, pacman_game, unified_size, unified_size, unified_size)
 
     # Draw path
-    path_array = draw_path(
-        pacman_game,
-        game_renderer,
-        unified_size,
-        GameObject,
-        Line,
-        (pacman.get_position()),
-        (pacman._renderer.get_cookie_position()),
-    )
+    # path_array = draw_path(
+    #     pacman_game,
+    #     game_renderer,
+    #     unified_size,
+    #     GameObject,
+    #     Wall,
+    #     translate_screen_to_maze(pacman.get_position()),
+    #     translate_screen_to_maze(pacman._renderer.get_cookie_position()),
+    # )
+
     game_renderer.add_hero(pacman)
     game_renderer.set_current_level(level)
     game_renderer.tick(120)

@@ -17,7 +17,6 @@ class GameObject:
         in_size: int,
         in_color=(255, 0, 0),
         is_circle: bool = False,
-        is_line: bool = False,
     ):
         self._size = in_size
         self._renderer: GameRenderer = in_surface
@@ -26,14 +25,10 @@ class GameObject:
         self.x = x
         self._color = in_color
         self._circle = is_circle
-        self._line = is_line
-        # self._shape = pygame.Rect(self.x, self.y, in_size, in_size)
+        self._shape = pygame.Rect(self.x, self.y, in_size, in_size)
 
     def draw(self):
-        if self._line:
-            print(self.x, self.y)
-            pygame.draw.line(self._surface, self._color, self.x, self.y, 5)
-        elif self._circle:
+        if self._circle:
             pygame.draw.circle(self._surface, self._color, (self.x, self.y), self._size)
         else:
             rect_object = pygame.Rect(self.x, self.y, self._size, self._size)
@@ -56,18 +51,6 @@ class GameObject:
 class Wall(GameObject):
     def __init__(self, in_surface, x, y, in_size: int, in_color=(0, 0, 255)):
         super().__init__(in_surface, x * in_size, y * in_size, in_size, in_color)
-
-
-class Line(GameObject):
-    def __init__(self, in_surface, x, y, in_color=(255, 0, 0)):
-        super().__init__(
-            in_surface,
-            x,
-            y,
-            in_color,
-            is_circle=False,
-            is_line=True,
-        )
 
 
 class MovableObject(GameObject):
@@ -292,7 +275,7 @@ class Ghost(MovableObject):
         if self.next_target is None:
             if self._renderer.get_current_mode() == GhostBehaviour.CHASE:
                 self.request_path_to_player(self)
-            else:
+            elif self._renderer.get_current_mode() == GhostBehaviour.SCATTER:
                 self.game_controller.request_new_random_path(self)
             return Direction.NONE
 
@@ -305,7 +288,7 @@ class Ghost(MovableObject):
 
         if self._renderer.get_current_mode() == GhostBehaviour.CHASE:
             self.request_path_to_player(self)
-        else:
+        elif self._renderer.get_current_mode() == GhostBehaviour.SCATTER:
             self.game_controller.request_new_random_path(self)
         return Direction.NONE
 
@@ -362,7 +345,7 @@ class GameRenderer:
         self._lives = 3
         self._score = 0
         self._score_cookie_pickup = 10
-        self._current_mode = GhostBehaviour.SCATTER  # default
+        self._current_mode = GhostBehaviour.NONE  # default
         self._current_level = 1  # default
         self._mode_switch_event = pygame.USEREVENT + 1  # custom event
         self._pakupaku_event = pygame.USEREVENT + 3
@@ -388,11 +371,13 @@ class GameRenderer:
 
             if self._hero is None:
                 self.display_text(
-                    "YOU DIED", (self._width / 2 - 256, self._height / 2 - 256), 100
+                    "YOU DIED",
+                    (self._width / 2 - self._width / 4, self._height / 2),
+                    50,
                 )
             if self.get_won():
                 self.display_text(
-                    "YOU WON", (self._width / 2 - 256, self._height / 2 - 256), 100
+                    "YOU WON", (self._width / 2 - self._width / 4, self._height / 2), 50
                 )
             pygame.display.flip()
             self._clock.tick(in_fps)
@@ -405,10 +390,13 @@ class GameRenderer:
         if self._current_level == 1:
             self.set_current_mode(GhostBehaviour.NONE)
         elif self._current_level == 2:
+            self.set_current_mode(GhostBehaviour.IDLE)
+        elif self._current_level == 3:
             self.set_current_mode(GhostBehaviour.SCATTER)
         elif self._current_level == 4:
             self.set_current_mode(GhostBehaviour.CHASE)
 
+        # Increase chasing in time by current phase
         # current_phase_timings = self._modes[self._current_phase]
         # print(
         #     f"Current phase: {str(self._current_phase)}, current_phase_timings: {str(current_phase_timings)}"
@@ -481,7 +469,7 @@ class GameRenderer:
         if self._lives == 0:
             self.end_game()
 
-    def display_text(self, text, in_position=(32, 0), in_size=30):
+    def display_text(self, text, in_position=(32, 0), in_size=25):
         font = pygame.font.SysFont("Arial", in_size)
         text_surface = font.render(text, False, (255, 255, 255))
         self._screen.blit(text_surface, in_position)
@@ -521,15 +509,3 @@ class GameRenderer:
 
         if self._hero is None:
             return
-
-        # Movement
-
-        # pressed = pygame.key.get_pressed()
-        # if pressed[pygame.K_UP]:
-        #     self._hero.set_direction(Direction.UP)
-        # elif pressed[pygame.K_LEFT]:
-        #     self._hero.set_direction(Direction.LEFT)
-        # elif pressed[pygame.K_DOWN]:
-        #     self._hero.set_direction(Direction.DOWN)
-        # elif pressed[pygame.K_RIGHT]:
-        #     self._hero.set_direction(Direction.RIGHT)

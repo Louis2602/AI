@@ -20,6 +20,7 @@ class GhostBehaviour(Enum):
     CHASE = 1
     SCATTER = 2
     NONE = 3
+    IDLE = 4
 
 
 def translate_screen_to_maze(in_coords, in_size=32):
@@ -35,36 +36,26 @@ def draw_path(
     game_renderer,
     unified_size,
     GameObject,
-    Line,
+    Wall,
     _from,
     _to,
 ):
     red = (255, 0, 0)
     green = (0, 255, 0)
-    white = (80, 80, 80)
+    white = (255, 255, 255)
+    gray = (211, 211, 211)
 
     path_array = pacman_game.p.get_path_a_star(_from, _to)
 
-    # pygame.draw.line(screen, red, path_array[index], path_array[index + 1], 5)
-    print(Line)
-    for index, _ in enumerate(path_array[:-1]):
+    for path in path_array:
         game_renderer.add_game_object(
-            Line(
-                game_renderer,
-                path_array[index],
-                path_array[index + 1],
-                red,
-            )
+            Wall(game_renderer, path[1], path[0], unified_size, gray)
         )
 
     from_translated = translate_maze_to_screen(_from)
     game_renderer.add_game_object(
         GameObject(
-            game_renderer,
-            from_translated[0],
-            from_translated[1],
-            unified_size,
-            red,
+            game_renderer, from_translated[0], from_translated[1], unified_size, red
         )
     )
 
