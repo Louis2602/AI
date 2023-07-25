@@ -65,7 +65,6 @@ class MovableObject(GameObject):
     ):
         super().__init__(in_surface, x, y, in_size, in_color, is_circle)
         self.current_direction = Direction.NONE
-        self.direction_buffer = Direction.NONE
         self.last_working_direction = Direction.NONE
         self.location_queue = []
         self.next_target = None
@@ -76,7 +75,6 @@ class MovableObject(GameObject):
 
     def set_direction(self, in_direction):
         self.current_direction = in_direction
-        self.direction_buffer = in_direction
 
     def collides_with_wall(self, in_position):
         collision_rect = pygame.Rect(
@@ -91,7 +89,7 @@ class MovableObject(GameObject):
         return collides
 
     def check_collision_in_direction(self, in_direction: Direction):
-        desired_position = (0, 0)
+        desired_position = (1, 1)
         if in_direction == Direction.NONE:
             return False, desired_position
         if in_direction == Direction.UP:
@@ -121,48 +119,97 @@ class MovableObject(GameObject):
 
 
 class Hero(MovableObject):
-    def __init__(self, in_surface, x, y, in_size: int):
+    def __init__(self, in_surface, in_game_controller, x, y, in_size: int):
         super().__init__(in_surface, x, y, in_size, (255, 255, 0), False)
-        self.last_non_colliding_position = (0, 0)
+        self.game_controller = in_game_controller
+        self.last_non_colliding_position = (1, 1)
         self.open = pygame.image.load("images/paku.png")
         self.closed = pygame.image.load("images/man.png")
         self.image = self.open
         self.mouth_open = True
 
-    def tick(self):
-        # TELEPORT
-        if self.x < 0:
-            self.x = self._renderer._width
+    # def tick(self):
+    #     # TELEPORT
+    #     if self.x < 0:
+    #         self.x = self._renderer._width
 
-        if self.x > self._renderer._width:
-            self.x = 0
+    #     if self.x > self._renderer._width:
+    #         self.x = 0
 
-        self.last_non_colliding_position = self.get_position()
+    #     self.last_non_colliding_position = self.get_position()
 
-        if self.check_collision_in_direction(self.direction_buffer)[0]:
-            self.automatic_move(self.current_direction)
-        else:
-            self.automatic_move(self.direction_buffer)
-            self.current_direction = self.direction_buffer
+    #     if self.check_collision_in_direction(self.current_direction)[0]:
+    #         self.automatic_move(self.current_direction)
+    #     else:
+    #         self.automatic_move(self.current_direction)
 
-        if self.collides_with_wall((self.x, self.y)):
-            self.set_position(
-                self.last_non_colliding_position[0], self.last_non_colliding_position[1]
-            )
+    #     if self.collides_with_wall((self.x, self.y)):
+    #         self.set_position(
+    #             self.last_non_colliding_position[0], self.last_non_colliding_position[1]
+    #         )
+    #     self.handle_cookie_pickup()
+    #     self.handle_ghosts()
 
+    def reached_target(self):
+        if (self.x, self.y) == self.next_target:
+            self.next_target = self.get_next_location()
+        self.current_direction = self.calculate_direction_to_next_target()
+
+    def set_new_path(self, in_path):
+        for item in in_path:
+            self.location_queue.append(item)
+        self.next_target = self.get_next_location()
+
+    def calculate_direction_to_next_target(self) -> Direction:
+        if self.next_target is None:
+            self.request_path_to_cookie(self)
+            return Direction.NONE
+
+        diff_x = self.next_target[0] - self.x
+        diff_y = self.next_target[1] - self.y
+        if diff_x == 0:
+            return Direction.DOWN if diff_y > 0 else Direction.UP
+        if diff_y == 0:
+            return Direction.LEFT if diff_x < 0 else Direction.RIGHT
+        self.request_path_to_cookie(self)
+        return Direction.NONE
+
+    def request_path_to_cookie(self, in_hero):
+        player_position = translate_screen_to_maze(in_hero.get_position())
+
+        cookie_position = translate_screen_to_maze(
+            in_hero._renderer.get_cookie_position()
+        )
+        print("cookie pos:", cookie_position)
+        path = in_hero.game_controller.p.get_path_a_star(
+            player_position, cookie_position
+        )
+        print("path", path)
+        new_path = [translate_maze_to_screen(item) for item in path]
+        in_hero.set_new_path(new_path)
+
+    def automatic_move(self, in_direction: Direction):
+        if in_direction == Direction.UP:
+            self.set_position(self.x, self.y - 1)
+        elif in_direction == Direction.DOWN:
+            self.set_position(self.x, self.y + 1)
+        elif in_direction == Direction.LEFT:
+            self.set_position(self.x - 1, self.y)
+        elif in_direction == Direction.RIGHT:
+            self.set_position(self.x + 1, self.y)
         self.handle_cookie_pickup()
         self.handle_ghosts()
 
-    def automatic_move(self, in_direction: Direction):
-        collision_result = self.check_collision_in_direction(in_direction)
+    # def automatic_move(self, in_direction: Direction):
+    #     collision_result = self.check_collision_in_direction(in_direction)
 
-        desired_position_collides = collision_result[0]
-        if not desired_position_collides:
-            self.last_working_direction = self.current_direction
-            desired_position = collision_result[1]
-            self.set_position(desired_position[0], desired_position[1])
-        else:
-            self.current_direction = self.last_working_direction
+    #     desired_position_collides = collision_result[0]
+    #     if not desired_position_collides:
+    #         self.last_working_direction = self.current_direction
+    #         desired_position = collision_result[1]
+    #         self.set_position(desired_position[0], desired_position[1])
+    #     else:
+    #         self.current_direction = self.last_working_direction
 
     def handle_cookie_pickup(self):
         collision_rect = pygame.Rect(self.x, self.y, self._size, self._size)
@@ -190,6 +237,9 @@ class Hero(MovableObject):
             collides = collision_rect.colliderect(ghost.get_shape())
             if collides and ghost in game_objects:
                 if not self._renderer.get_won():
+                    print(
+                        f"Va cham tai: {translate_screen_to_maze(ghost.get_position())}"
+                    )
                     self._renderer.kill_pacman()
 
     def draw(self):
@@ -253,7 +303,6 @@ class Ghost(MovableObject):
         path = self.game_controller.p.get_path_a_star(
             current_maze_coord, player_position
         )
-
         new_path = [translate_maze_to_screen(item) for item in path]
         in_ghost.set_new_path(new_path)
 
@@ -276,6 +325,9 @@ class Cookie(GameObject):
     def __init__(self, in_surface, x, y):
         super().__init__(in_surface, x, y, 4, (255, 255, 0), True)
 
+    def get_position(self):
+        return (self.x, self.y)
+
 
 class GameRenderer:
     def __init__(self, in_width: int, in_height: int):
@@ -295,7 +347,6 @@ class GameRenderer:
         self._lives = 3
         self._score = 0
         self._score_cookie_pickup = 10
-        self._score_ghost_eaten = 400
         self._current_mode = GhostBehaviour.SCATTER
         self._mode_switch_event = pygame.USEREVENT + 1  # custom event
         self._pakupaku_event = pygame.USEREVENT + 3
@@ -378,6 +429,12 @@ class GameRenderer:
     def get_hero_position(self):
         return self._hero.get_position() if self._hero != None else (1, 1)
 
+    def get_cookie_position(self):
+        cookie_position = self.get_hero_position()
+        if len(self._cookies) != 0:
+            cookie_position = self._cookies[0].get_position()
+        return cookie_position
+
     def set_current_mode(self, in_mode: GhostBehaviour):
         self._current_mode = in_mode
 
@@ -434,16 +491,17 @@ class GameRenderer:
                     break
                 self._hero.mouth_open = not self._hero.mouth_open
 
-        pressed = pygame.key.get_pressed()
         if self._hero is None:
             return
 
         # Movement
-        if pressed[pygame.K_UP]:
-            self._hero.set_direction(Direction.UP)
-        elif pressed[pygame.K_LEFT]:
-            self._hero.set_direction(Direction.LEFT)
-        elif pressed[pygame.K_DOWN]:
-            self._hero.set_direction(Direction.DOWN)
-        elif pressed[pygame.K_RIGHT]:
-            self._hero.set_direction(Direction.RIGHT)
+
+        # pressed = pygame.key.get_pressed()
+        # if pressed[pygame.K_UP]:
+        #     self._hero.set_direction(Direction.UP)
+        # elif pressed[pygame.K_LEFT]:
+        #     self._hero.set_direction(Direction.LEFT)
+        # elif pressed[pygame.K_DOWN]:
+        #     self._hero.set_direction(Direction.DOWN)
+        # elif pressed[pygame.K_RIGHT]:
+        #     self._hero.set_direction(Direction.RIGHT)
