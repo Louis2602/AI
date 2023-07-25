@@ -65,7 +65,6 @@ class MovableObject(GameObject):
     ):
         super().__init__(in_surface, x, y, in_size, in_color, is_circle)
         self.current_direction = Direction.NONE
-        self.direction_buffer = Direction.NONE
         self.last_working_direction = Direction.NONE
         self.location_queue = []
         self.next_target = None
@@ -76,7 +75,6 @@ class MovableObject(GameObject):
 
     def set_direction(self, in_direction):
         self.current_direction = in_direction
-        self.direction_buffer = in_direction
 
     def collides_with_wall(self, in_position):
         collision_rect = pygame.Rect(
@@ -109,7 +107,6 @@ class MovableObject(GameObject):
         pass
 
     def tick(self):
-        print(self.current_direction)
         self.reached_target()
         self.automatic_move(self.current_direction)
 
@@ -125,31 +122,33 @@ class Hero(MovableObject):
     def __init__(self, in_surface, in_game_controller, x, y, in_size: int):
         super().__init__(in_surface, x, y, in_size, (255, 255, 0), False)
         self.game_controller = in_game_controller
-        self.last_non_colliding_position = (0, 0)
+        self.last_non_colliding_position = (1, 1)
         self.open = pygame.image.load("images/paku.png")
         self.closed = pygame.image.load("images/man.png")
         self.image = self.open
         self.mouth_open = True
 
     # def tick(self):
-    # TELEPORT
-    # if self.x < 0:
-    #     self.x = self._renderer._width
+    #     # TELEPORT
+    #     if self.x < 0:
+    #         self.x = self._renderer._width
 
-    # if self.x > self._renderer._width:
-    #     self.x = 0
+    #     if self.x > self._renderer._width:
+    #         self.x = 0
 
-    # self.last_non_colliding_position = self.get_position()
+    #     self.last_non_colliding_position = self.get_position()
 
-    #     # if self.check_collision_in_direction(self.direction_buffer)[0]:
-    #     #     self.automatic_move(self.current_direction)
-    #     # else:
-    #     #     self.automatic_move(self.direction_buffer)
-    #     #     self.current_direction = self.direction_buffer
+    #     if self.check_collision_in_direction(self.current_direction)[0]:
+    #         self.automatic_move(self.current_direction)
+    #     else:
+    #         self.automatic_move(self.current_direction)
 
     #     if self.collides_with_wall((self.x, self.y)):
     #         self.set_position(
-    #             self.last_non_colliding_position[0], self.last_non_colliding_position[1])
+    #             self.last_non_colliding_position[0], self.last_non_colliding_position[1]
+    #         )
+    #     self.handle_cookie_pickup()
+    #     self.handle_ghosts()
 
     def reached_target(self):
         if (self.x, self.y) == self.next_target:
@@ -190,17 +189,6 @@ class Hero(MovableObject):
         in_hero.set_new_path(new_path)
 
     def automatic_move(self, in_direction: Direction):
-        print(in_direction)
-        # collision_result = self.check_collision_in_direction(in_direction)
-
-        # desired_position_collides = collision_result[0]
-
-        # if not desired_position_collides:
-        #     self.last_working_direction = self.current_direction
-        #     desired_position = collision_result[1]
-        #     self.set_position(desired_position[0], desired_position[1])
-        # else:
-        #     self.current_direction = self.last_working_direction
         if in_direction == Direction.UP:
             self.set_position(self.x, self.y - 1)
         elif in_direction == Direction.DOWN:
@@ -248,8 +236,10 @@ class Hero(MovableObject):
         for ghost in ghosts:
             collides = collision_rect.colliderect(ghost.get_shape())
             if collides and ghost in game_objects:
-                print("va cham tai", self.x, self.y)
                 if not self._renderer.get_won():
+                    print(
+                        f"Va cham tai: {translate_screen_to_maze(ghost.get_position())}"
+                    )
                     self._renderer.kill_pacman()
 
     def draw(self):
