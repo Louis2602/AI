@@ -1,6 +1,6 @@
 import random
 from search import Pathfinder
-from graphics import Ghost, Hero
+from game import Ghost, Hero
 from utils import translate_maze_to_screen, translate_screen_to_maze, get_maze
 
 
@@ -27,6 +27,7 @@ class PacmanGameController:
             current_maze_coord,
             random_space,
         )
+        print("RANDOM PATH:", path)
         test_path = [translate_maze_to_screen(item) for item in path]
         in_ghost.set_new_path(test_path)
 

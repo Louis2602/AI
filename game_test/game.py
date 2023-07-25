@@ -17,6 +17,7 @@ class GameObject:
         in_size: int,
         in_color=(255, 0, 0),
         is_circle: bool = False,
+        is_line: bool = False,
     ):
         self._size = in_size
         self._renderer: GameRenderer = in_surface
@@ -25,10 +26,14 @@ class GameObject:
         self.x = x
         self._color = in_color
         self._circle = is_circle
-        self._shape = pygame.Rect(self.x, self.y, in_size, in_size)
+        self._line = is_line
+        # self._shape = pygame.Rect(self.x, self.y, in_size, in_size)
 
     def draw(self):
-        if self._circle:
+        if self._line:
+            print(self.x, self.y)
+            pygame.draw.line(self._surface, self._color, self.x, self.y, 5)
+        elif self._circle:
             pygame.draw.circle(self._surface, self._color, (self.x, self.y), self._size)
         else:
             rect_object = pygame.Rect(self.x, self.y, self._size, self._size)
@@ -51,6 +56,18 @@ class GameObject:
 class Wall(GameObject):
     def __init__(self, in_surface, x, y, in_size: int, in_color=(0, 0, 255)):
         super().__init__(in_surface, x * in_size, y * in_size, in_size, in_color)
+
+
+class Line(GameObject):
+    def __init__(self, in_surface, x, y, in_color=(255, 0, 0)):
+        super().__init__(
+            in_surface,
+            x,
+            y,
+            in_color,
+            is_circle=False,
+            is_line=True,
+        )
 
 
 class MovableObject(GameObject):
@@ -177,12 +194,15 @@ class Hero(MovableObject):
     def request_path_to_cookie(self, in_hero):
         player_position = translate_screen_to_maze(in_hero.get_position())
 
+        print("Player:", player_position)
         cookie_position = translate_screen_to_maze(
             in_hero._renderer.get_cookie_position()
         )
+        print("Cookie:", cookie_position)
         path = in_hero.game_controller.p.get_path_a_star(
             player_position, cookie_position
         )
+        print("PATH:", path)
         new_path = [translate_maze_to_screen(item) for item in path]
         in_hero.set_new_path(new_path)
 
@@ -293,11 +313,11 @@ class Ghost(MovableObject):
         player_position = translate_screen_to_maze(
             in_ghost._renderer.get_hero_position()
         )
-        current_maze_coord = translate_screen_to_maze(in_ghost.get_position())
+        ghost_position = translate_screen_to_maze(in_ghost.get_position())
         # Chasing player mode
-        path = self.game_controller.p.get_path_a_star(
-            current_maze_coord, player_position
-        )
+        path = self.game_controller.p.get_path_a_star(ghost_position, player_position)
+        print("GHOST:", ghost_position)
+        print("PATH TO PLAYER:", path)
         new_path = [translate_maze_to_screen(item) for item in path]
         in_ghost.set_new_path(new_path)
 
@@ -342,7 +362,8 @@ class GameRenderer:
         self._lives = 3
         self._score = 0
         self._score_cookie_pickup = 10
-        self._current_mode = GhostBehaviour.SCATTER
+        self._current_mode = GhostBehaviour.SCATTER  # default
+        self._current_level = 1  # default
         self._mode_switch_event = pygame.USEREVENT + 1  # custom event
         self._pakupaku_event = pygame.USEREVENT + 3
         self._modes = [
@@ -381,25 +402,32 @@ class GameRenderer:
         print("Game over")
 
     def handle_mode_switch(self):
-        current_phase_timings = self._modes[self._current_phase]
-        print(
-            f"Current phase: {str(self._current_phase)}, current_phase_timings: {str(current_phase_timings)}"
-        )
-        scatter_timing = current_phase_timings[0]
-        chase_timing = current_phase_timings[1]
-
-        if self._current_mode == GhostBehaviour.CHASE:
-            self._current_phase += 1
+        if self._current_level == 1:
+            self.set_current_mode(GhostBehaviour.NONE)
+        elif self._current_level == 2:
             self.set_current_mode(GhostBehaviour.SCATTER)
-        else:
+        elif self._current_level == 4:
             self.set_current_mode(GhostBehaviour.CHASE)
 
-        used_timing = (
-            scatter_timing
-            if self._current_mode == GhostBehaviour.SCATTER
-            else chase_timing
-        )
-        pygame.time.set_timer(self._mode_switch_event, used_timing * 1000)
+        # current_phase_timings = self._modes[self._current_phase]
+        # print(
+        #     f"Current phase: {str(self._current_phase)}, current_phase_timings: {str(current_phase_timings)}"
+        # )
+        # scatter_timing = current_phase_timings[0]
+        # chase_timing = current_phase_timings[1]
+
+        # if self._current_mode == GhostBehaviour.CHASE:
+        #     self._current_phase += 1
+        #     self.set_current_mode(GhostBehaviour.SCATTER)
+        # else:
+        #     self.set_current_mode(GhostBehaviour.CHASE)
+
+        # used_timing = (
+        #     scatter_timing
+        #     if self._current_mode == GhostBehaviour.SCATTER
+        #     else chase_timing
+        # )
+        # pygame.time.set_timer(self._mode_switch_event, used_timing * 1000)
 
     def add_game_object(self, obj: GameObject):
         self._game_objects.append(obj)
@@ -432,6 +460,9 @@ class GameRenderer:
 
     def set_current_mode(self, in_mode: GhostBehaviour):
         self._current_mode = in_mode
+
+    def set_current_level(self, in_level):
+        self._current_level = in_level
 
     def get_current_mode(self):
         return self._current_mode
