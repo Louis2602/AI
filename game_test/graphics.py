@@ -180,11 +180,9 @@ class Hero(MovableObject):
         cookie_position = translate_screen_to_maze(
             in_hero._renderer.get_cookie_position()
         )
-        print("cookie pos:", cookie_position)
         path = in_hero.game_controller.p.get_path_a_star(
             player_position, cookie_position
         )
-        print("path", path)
         new_path = [translate_maze_to_screen(item) for item in path]
         in_hero.set_new_path(new_path)
 
@@ -237,9 +235,6 @@ class Hero(MovableObject):
             collides = collision_rect.colliderect(ghost.get_shape())
             if collides and ghost in game_objects:
                 if not self._renderer.get_won():
-                    print(
-                        f"Va cham tai: {translate_screen_to_maze(ghost.get_position())}"
-                    )
                     self._renderer.kill_pacman()
 
     def draw(self):
@@ -449,6 +444,8 @@ class GameRenderer:
     def kill_pacman(self):
         self._lives -= 1
         self._hero.set_position(32, 32)
+        self._hero.next_target = None
+        self._hero.location_queue.clear()
         self._hero.set_direction(Direction.NONE)
         if self._lives == 0:
             self.end_game()

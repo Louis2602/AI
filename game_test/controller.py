@@ -8,7 +8,6 @@ class PacmanGameController:
     def __init__(self, maze_name):
         self.maze, self.size, self.pacman_pos = get_maze(maze_name)
 
-        self.numpy_maze = []
         self.cookie_spaces = []
         self.reachable_spaces = []
         self.ghost_spawns = []
@@ -18,7 +17,6 @@ class PacmanGameController:
             "images/ghost_orange.png",
             "images/ghost_blue.png",
         ]
-        self.npsize = (0, 0)
         self.convert_maze_to_numpy()
         self.p = Pathfinder(self.maze)
 
