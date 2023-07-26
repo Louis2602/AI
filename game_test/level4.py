@@ -25,7 +25,7 @@ def get_ghost_neighbors(pos, maze):
 
     for dx, dy in directions:
         x, y = pos[0] + dx, pos[1] + dy
-        if 0 <= x < len(maze) and 0 <= y < len(maze[0]) and (maze[x][y] != 1):
+        if 0 <= x < len(maze) and 0 <= y < len(maze[0]) and maze[x][y] != 1:
             neighbors.append((x, y))
 
     return neighbors
@@ -118,17 +118,12 @@ def ghostAstart(maze, start, goal):
 
 
 def changePath(maze, pacmanPos, ghosts):
-    check = False
     moveablePos = get_neighbors(pacmanPos, maze)
     for pos in moveablePos:
         if check_safe_move(pos, ghosts) == True:
-            check = True
             pacmanPos = pos
             break
-    if check:
-        return pacmanPos
-    else:
-        return -1
+    return pacmanPos
 
 
 def ghostMove(maze, pacmanPos, ghosts):
@@ -154,17 +149,22 @@ def handleAStar(maze, start, goal, foods, ghosts):
     ghostsPath = [ghosts]
     while pacmanPos != goal:
         pacmanPath = astar(maze, pacmanPos, goal)
+        # print("PACMAN", pacmanPos)
+        # print("GHOSTS", ghosts)
         while pacmanPath == False:
+            if (pacmanPos in ghosts):
+                return maze, pathSolution, foods, ghosts, ghostsPath, "dead"
+            
             newPacmanPos = changePath(maze, pacmanPos, ghosts)
-            if newPacmanPos == -1:
-                return maze, pathSolution, foods, ghostsPath, "dead"
-
+                
             maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
             ghostsPath.append(ghosts)
-            pathSolution.append(newPacmanPos)
-            pacmanPath = astar(maze, newPacmanPos, goal)
             pacmanPos = newPacmanPos
+            pathSolution.append(pacmanPos)
+            pacmanPath = astar(maze, pacmanPos, goal)
             maze, foods = eatFood(maze, pacmanPos, foods)
+            # print("PACMAN", pacmanPos)
+            # print("GHOSTS", ghosts)
 
         pacmanPos = pacmanPath.pop(0)
         maze, foods = eatFood(maze, pacmanPos, foods)
@@ -175,42 +175,49 @@ def handleAStar(maze, start, goal, foods, ghosts):
             ghostsPath.append(ghosts)
             pacmanPos = pacmanPath.pop(0)
             pathSolution.append(pacmanPos)
+            # print("PACMAN", pacmanPos)
+            # print("GHOSTS", ghosts)
         else:
+            if (pacmanPos in ghosts):
+                return maze, pathSolution, foods, ghosts, ghostsPath, "dead"
             newPacmanPos = changePath(maze, pacmanPos, ghosts)
-            if newPacmanPos == -1:
-                return maze, pathSolution, foods, ghostsPath, "dead"
+            # if newPacmanPos == -1:
+            #     print("FALSE", pacmanPos)
+            #     return maze, pathSolution, foods, ghosts, ghostsPath, "dead"
 
             maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
             ghostsPath.append(ghosts)
-
-            pathSolution.append(newPacmanPos)
             pacmanPos = newPacmanPos
+            pathSolution.append(newPacmanPos)
             maze, foods = eatFood(maze, pacmanPos, foods)
+            # print("PACMAN", pacmanPos)
+            # print("GHOSTS", ghosts)
 
         if pacmanPos == goal:
             maze, foods = eatFood(maze, pacmanPos, foods)
 
-    return maze, pathSolution, foods, ghostsPath, "alive"
+    return maze, pathSolution, foods, ghosts, ghostsPath, "alive"
 
 
 def handleMainLv4(maze, start):
     ghosts = find_object(maze, 3)
     foods = find_object(maze, 2)
     pacmanPos = tuple(start)
-    pacmanRes = []
-    ghostsRes = []
+    pacmanRes = [start]
+    ghostsRes = [ghosts]
 
     while foods:
         foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
-        maze, pacmanPath, foods, ghostsPath, status = handleAStar(
+        maze, pacmanPath, foods, ghosts, ghostsPath, status = handleAStar(
             maze, pacmanPos, foods[0], foods, ghosts
         )
         pacmanPos = pacmanPath[len(pacmanPath) - 1]
-        pacmanRes += pacmanPath
-        ghostsRes += ghostsPath
+        pacmanRes += pacmanPath[1:]
+        ghostsRes += ghostsPath[1:]
         if status == "dead":
             print("dead")
             break
-    print("PAC", pacmanRes)
-    print("GHO", ghostsRes)
+    
+    print("PACMAN", pacmanRes)
+    print("GHOSTS", ghostsRes)
     return pacmanRes, ghostsRes
