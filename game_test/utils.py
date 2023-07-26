@@ -1,4 +1,5 @@
 from enum import Enum
+import pygame
 
 
 class Direction(Enum):
@@ -18,6 +19,8 @@ class ScoreType(Enum):
 class GhostBehaviour(Enum):
     CHASE = 1
     SCATTER = 2
+    NONE = 3
+    IDLE = 4
 
 
 def translate_screen_to_maze(in_coords, in_size=32):
@@ -28,28 +31,31 @@ def translate_maze_to_screen(in_coords, in_size=32):
     return in_coords[1] * in_size, in_coords[0] * in_size
 
 
-def draw_path(pacman_game, game_renderer, unified_size, GameObject, Wall):
+def draw_path(
+    pacman_game,
+    game_renderer,
+    unified_size,
+    GameObject,
+    Wall,
+    _from,
+    _to,
+):
     red = (255, 0, 0)
     green = (0, 255, 0)
-    white = (80, 80, 80)
-    _from = (1, 1)
-    _to = (14, 24)
+    white = (255, 255, 255)
+    gray = (211, 211, 211)
 
     path_array = pacman_game.p.get_path_a_star(_from, _to)
 
     for path in path_array:
         game_renderer.add_game_object(
-            Wall(game_renderer, path[1], path[0], unified_size, white)
+            Wall(game_renderer, path[1], path[0], unified_size, gray)
         )
 
     from_translated = translate_maze_to_screen(_from)
     game_renderer.add_game_object(
         GameObject(
-            game_renderer,
-            from_translated[0],
-            from_translated[1],
-            unified_size,
-            red,
+            game_renderer, from_translated[0], from_translated[1], unified_size, red
         )
     )
 
