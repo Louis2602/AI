@@ -78,7 +78,7 @@ class GameRenderer:
         self._game_objects = []
         self._walls = []
         self._cookies = []
-        self._hero: Hero = None
+        self._hero: Pacman = None
 
     def tick(self, in_fps: int):
         black = (0, 0, 0)
@@ -195,7 +195,7 @@ class MovableObject(GameObject):
         pass
 
 
-class Hero(MovableObject):
+class Pacman(MovableObject):
     def __init__(self, in_surface, x, y, in_size: int):
         super().__init__(in_surface, x, y, in_size, (255, 255, 0), False)
         self.last_non_colliding_position = (0, 0)
@@ -440,6 +440,6 @@ if __name__ == "__main__":
         )
         game_renderer.add_game_object(ghost)
 
-    pacman = Hero(game_renderer, unified_size, unified_size, unified_size)
+    pacman = Pacman(game_renderer, unified_size, unified_size, unified_size)
     game_renderer.add_hero(pacman)
     game_renderer.tick(120)

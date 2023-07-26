@@ -1,7 +1,5 @@
-import random
-from search import Pathfinder
-from game import Ghost, Hero
-from utils import translate_maze_to_screen, translate_screen_to_maze, get_maze
+from search import PathFinder
+from utils import get_maze
 
 
 class PacmanGameController:
@@ -17,21 +15,13 @@ class PacmanGameController:
             "images/ghost_orange.png",
             "images/ghost_blue.png",
         ]
-        self.convert_maze_to_numpy()
-        self.p = Pathfinder(self.maze)
+        self.read_maze()
+        # self.pacman_path, self.ghost_path = Pathfinder(
+        #     self.maze, self.pacman_pos
+        # ).get_path_lv4()
+        self.search = PathFinder(self.maze, self.pacman_pos)
 
-    def request_new_random_path(self, in_ghost: Ghost):
-        random_space = random.choice(self.reachable_spaces)
-        current_maze_coord = translate_screen_to_maze(in_ghost.get_position())
-        path = self.p.get_path_a_star(
-            current_maze_coord,
-            random_space,
-        )
-        print("RANDOM PATH:", path)
-        test_path = [translate_maze_to_screen(item) for item in path]
-        in_ghost.set_new_path(test_path)
-
-    def convert_maze_to_numpy(self):
+    def read_maze(self):
         for row in range(self.size[0]):
             for column in range(self.size[1]):
                 if self.maze[row][column] == 0:

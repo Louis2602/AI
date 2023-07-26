@@ -3,8 +3,6 @@ from utils import (
     Direction,
     ScoreType,
     GhostBehaviour,
-    translate_maze_to_screen,
-    translate_screen_to_maze,
 )
 
 
@@ -76,33 +74,6 @@ class MovableObject(GameObject):
     def set_direction(self, in_direction):
         self.current_direction = in_direction
 
-    def collides_with_wall(self, in_position):
-        collision_rect = pygame.Rect(
-            in_position[0], in_position[1], self._size, self._size
-        )
-        collides = False
-        walls = self._renderer.get_walls()
-        for wall in walls:
-            collides = collision_rect.colliderect(wall.get_shape())
-            if collides:
-                break
-        return collides
-
-    def check_collision_in_direction(self, in_direction: Direction):
-        desired_position = (1, 1)
-        if in_direction == Direction.NONE:
-            return False, desired_position
-        if in_direction == Direction.UP:
-            desired_position = (self.x, self.y - 1)
-        elif in_direction == Direction.DOWN:
-            desired_position = (self.x, self.y + 1)
-        elif in_direction == Direction.LEFT:
-            desired_position = (self.x - 1, self.y)
-        elif in_direction == Direction.RIGHT:
-            desired_position = (self.x + 1, self.y)
-
-        return self.collides_with_wall(desired_position), desired_position
-
     def automatic_move(self, in_direction: Direction):
         pass
 
@@ -118,78 +89,39 @@ class MovableObject(GameObject):
         self._surface.blit(self.image, self.get_shape())
 
 
-class Hero(MovableObject):
-    def __init__(self, in_surface, in_game_controller, x, y, in_size: int):
+class Pacman(MovableObject):
+    def __init__(self, in_surface, in_game_controller, x, y, in_size: int, pacman_path):
         super().__init__(in_surface, x, y, in_size, (255, 255, 0), False)
         self.game_controller = in_game_controller
         self.last_non_colliding_position = (1, 1)
         self.open = pygame.image.load("images/paku.png")
         self.closed = pygame.image.load("images/man.png")
+        self.location_queue = pacman_path
         self.image = self.open
         self.mouth_open = True
-
-    # def tick(self):
-    #     # TELEPORT
-    #     if self.x < 0:
-    #         self.x = self._renderer._width
-
-    #     if self.x > self._renderer._width:
-    #         self.x = 0
-
-    #     self.last_non_colliding_position = self.get_position()
-
-    #     if self.check_collision_in_direction(self.current_direction)[0]:
-    #         self.automatic_move(self.current_direction)
-    #     else:
-    #         self.automatic_move(self.current_direction)
-
-    #     if self.collides_with_wall((self.x, self.y)):
-    #         self.set_position(
-    #             self.last_non_colliding_position[0], self.last_non_colliding_position[1]
-    #         )
-    #     self.handle_cookie_pickup()
-    #     self.handle_ghosts()
 
     def reached_target(self):
         if (self.x, self.y) == self.next_target:
             self.next_target = self.get_next_location()
         self.current_direction = self.calculate_direction_to_next_target()
 
-    def set_new_path(self, in_path):
-        for item in in_path:
-            self.location_queue.append(item)
-        self.next_target = self.get_next_location()
-
     def calculate_direction_to_next_target(self) -> Direction:
         if self.next_target is None:
-            self.request_path_to_cookie(self)
+            self.next_target = self.get_next_location()
             return Direction.NONE
 
         diff_x = self.next_target[0] - self.x
         diff_y = self.next_target[1] - self.y
+
         if diff_x == 0:
             return Direction.DOWN if diff_y > 0 else Direction.UP
         if diff_y == 0:
             return Direction.LEFT if diff_x < 0 else Direction.RIGHT
-        self.request_path_to_cookie(self)
+        self.next_target = self.get_next_location()
         return Direction.NONE
 
-    def request_path_to_cookie(self, in_hero):
-        player_position = translate_screen_to_maze(in_hero.get_position())
-
-        print("Player:", player_position)
-        cookie_position = translate_screen_to_maze(
-            in_hero._renderer.get_cookie_position()
-        )
-        print("Cookie:", cookie_position)
-        path = in_hero.game_controller.p.get_path_a_star(
-            player_position, cookie_position
-        )
-        print("PATH:", path)
-        new_path = [translate_maze_to_screen(item) for item in path]
-        in_hero.set_new_path(new_path)
-
     def automatic_move(self, in_direction: Direction):
+        print(in_direction)
         if in_direction == Direction.UP:
             self.set_position(self.x, self.y - 1)
         elif in_direction == Direction.DOWN:
@@ -198,19 +130,9 @@ class Hero(MovableObject):
             self.set_position(self.x - 1, self.y)
         elif in_direction == Direction.RIGHT:
             self.set_position(self.x + 1, self.y)
+
         self.handle_cookie_pickup()
         self.handle_ghosts()
-
-    # def automatic_move(self, in_direction: Direction):
-    #     collision_result = self.check_collision_in_direction(in_direction)
-
-    #     desired_position_collides = collision_result[0]
-    #     if not desired_position_collides:
-    #         self.last_working_direction = self.current_direction
-    #         desired_position = collision_result[1]
-    #         self.set_position(desired_position[0], desired_position[1])
-    #     else:
-    #         self.current_direction = self.last_working_direction
 
     def handle_cookie_pickup(self):
         collision_rect = pygame.Rect(self.x, self.y, self._size, self._size)
@@ -244,7 +166,7 @@ class Hero(MovableObject):
         half_size = self._size / 2
         self.image = self.open if self.mouth_open else self.closed
         self.image = pygame.transform.rotate(self.image, self.current_direction.value)
-        super(Hero, self).draw()
+        super(Pacman, self).draw()
 
 
 class Ghost(MovableObject):
@@ -255,10 +177,12 @@ class Ghost(MovableObject):
         y,
         in_size: int,
         in_game_controller,
+        ghost_path,
         sprite_path="images/ghost_fright.png",
     ):
         super().__init__(in_surface, x, y, in_size)
         self.game_controller = in_game_controller
+        self.location_queue = ghost_path
         self.sprite_normal = pygame.image.load(sprite_path)
 
     def reached_target(self):
@@ -266,17 +190,9 @@ class Ghost(MovableObject):
             self.next_target = self.get_next_location()
         self.current_direction = self.calculate_direction_to_next_target()
 
-    def set_new_path(self, in_path):
-        for item in in_path:
-            self.location_queue.append(item)
-        self.next_target = self.get_next_location()
-
     def calculate_direction_to_next_target(self) -> Direction:
         if self.next_target is None:
-            if self._renderer.get_current_mode() == GhostBehaviour.CHASE:
-                self.request_path_to_player(self)
-            elif self._renderer.get_current_mode() == GhostBehaviour.SCATTER:
-                self.game_controller.request_new_random_path(self)
+            self.next_target = self.get_next_location()
             return Direction.NONE
 
         diff_x = self.next_target[0] - self.x
@@ -286,23 +202,8 @@ class Ghost(MovableObject):
         if diff_y == 0:
             return Direction.LEFT if diff_x < 0 else Direction.RIGHT
 
-        if self._renderer.get_current_mode() == GhostBehaviour.CHASE:
-            self.request_path_to_player(self)
-        elif self._renderer.get_current_mode() == GhostBehaviour.SCATTER:
-            self.game_controller.request_new_random_path(self)
+        self.next_target = self.get_next_location()
         return Direction.NONE
-
-    def request_path_to_player(self, in_ghost):
-        player_position = translate_screen_to_maze(
-            in_ghost._renderer.get_hero_position()
-        )
-        ghost_position = translate_screen_to_maze(in_ghost.get_position())
-        # Chasing player mode
-        path = self.game_controller.p.get_path_a_star(ghost_position, player_position)
-        print("GHOST:", ghost_position)
-        print("PATH TO PLAYER:", path)
-        new_path = [translate_maze_to_screen(item) for item in path]
-        in_ghost.set_new_path(new_path)
 
     def automatic_move(self, in_direction: Direction):
         if in_direction == Direction.UP:
@@ -341,33 +242,25 @@ class GameRenderer:
         self._walls = []
         self._cookies = []
         self._ghosts = []
-        self._hero: Hero = None
-        self._lives = 3
+        self._hero: Pacman = None
         self._score = 0
         self._score_cookie_pickup = 10
         self._current_mode = GhostBehaviour.NONE  # default
         self._current_level = 1  # default
         self._mode_switch_event = pygame.USEREVENT + 1  # custom event
         self._pakupaku_event = pygame.USEREVENT + 3
-        self._modes = [
-            (7, 20),
-            (7, 20),
-            (5, 20),
-            (5, 999999),  # 'infinite' chase seconds
-        ]
-        self._current_phase = 0
 
     def tick(self, in_fps: int):
         black = (0, 0, 0)
 
-        self.handle_mode_switch()
+        self.handle_level()
         pygame.time.set_timer(self._pakupaku_event, 200)  # open close mouth
         while not self._done:
             for game_object in self._game_objects:
                 game_object.tick()
                 game_object.draw()
 
-            self.display_text(f"[Score: {self._score}]  [Lives: {self._lives}]")
+            self.display_text(f"[Score: {self._score}]")
 
             if self._hero is None:
                 self.display_text(
@@ -386,7 +279,7 @@ class GameRenderer:
 
         print("Game over")
 
-    def handle_mode_switch(self):
+    def handle_level(self):
         if self._current_level == 1:
             self.set_current_mode(GhostBehaviour.NONE)
         elif self._current_level == 2:
@@ -395,27 +288,6 @@ class GameRenderer:
             self.set_current_mode(GhostBehaviour.SCATTER)
         elif self._current_level == 4:
             self.set_current_mode(GhostBehaviour.CHASE)
-
-        # Increase chasing in time by current phase
-        # current_phase_timings = self._modes[self._current_phase]
-        # print(
-        #     f"Current phase: {str(self._current_phase)}, current_phase_timings: {str(current_phase_timings)}"
-        # )
-        # scatter_timing = current_phase_timings[0]
-        # chase_timing = current_phase_timings[1]
-
-        # if self._current_mode == GhostBehaviour.CHASE:
-        #     self._current_phase += 1
-        #     self.set_current_mode(GhostBehaviour.SCATTER)
-        # else:
-        #     self.set_current_mode(GhostBehaviour.CHASE)
-
-        # used_timing = (
-        #     scatter_timing
-        #     if self._current_mode == GhostBehaviour.SCATTER
-        #     else chase_timing
-        # )
-        # pygame.time.set_timer(self._mode_switch_event, used_timing * 1000)
 
     def add_game_object(self, obj: GameObject):
         self._game_objects.append(obj)
@@ -461,13 +333,11 @@ class GameRenderer:
         self._hero = None
 
     def kill_pacman(self):
-        self._lives -= 1
         self._hero.set_position(32, 32)
         self._hero.next_target = None
         self._hero.location_queue.clear()
         self._hero.set_direction(Direction.NONE)
-        if self._lives == 0:
-            self.end_game()
+        self.end_game()
 
     def display_text(self, text, in_position=(32, 0), in_size=25):
         font = pygame.font.SysFont("Arial", in_size)
@@ -500,7 +370,7 @@ class GameRenderer:
                 self._done = True
 
             if event.type == self._mode_switch_event:
-                self.handle_mode_switch()
+                self.handle_level()
 
             if event.type == self._pakupaku_event:
                 if self._hero is None:
