@@ -55,7 +55,7 @@ if __name__ == "__main__":
         for i, ghost_spawn in enumerate(pacman_game.ghost_spawns):
             translated = translate_maze_to_screen(ghost_spawn)
             ghost_path = [
-                translate_maze_to_screen(sublist[0]) for sublist in ghosts_path
+                translate_maze_to_screen(sublist[i]) for sublist in ghosts_path
             ]
             ghost = Ghost(
                 game_renderer,
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
         game_renderer.add_hero(pacman)
         game_renderer.set_current_level(level)
-        game_renderer.tick(30)
+        game_renderer.tick(120)
 
         print("Execution time:", execution_time)
     else:
