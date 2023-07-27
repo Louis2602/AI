@@ -150,9 +150,8 @@ def eatFood(maze, pacmanPos, foods):
     return maze, foods
 
 def changeGoal(maze, pacmanPos, foods, ghosts):
-    print("FOOD", foods)
-    res = foods[0]
     foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
+    res = foods[0]
 
     for food in foods:
         path = astar(maze, pacmanPos, food)
@@ -168,15 +167,16 @@ def handleAStar(maze, start, goal, foods, ghosts):
     while True:
         if (len(foods) == 0):
             break
-        # if pacmanPos == goal:
-        #     maze, foods = eatFood(maze, pacmanPos, foods)
-        #     if (len(foods))
-        #     goal = changeGoal(maze, pacmanPos, foods, ghosts)    
+        if pacmanPos == goal:
+            maze, foods = eatFood(maze, pacmanPos, foods)
+            if (len(foods) == 0):
+                break
 
         goal = changeGoal(maze, pacmanPos, foods, ghosts)
         pacmanPath = astar(maze, pacmanPos, goal)
 
         if (len(pacmanPath) == 1):
+            print("HEHE", pacmanPath)
             maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
             ghostsPath.append(ghosts)
             pacmanPos = pacmanPath[0]
@@ -222,5 +222,8 @@ def handleMainLv4(maze, start):
         ghostsRes += ghostsPath[1:]
         if status == "dead":
             break
+    
+    print("PACMAN", pacmanRes)
+    print("GHOSTS", ghostsRes)
     
     return pacmanRes, ghostsRes
