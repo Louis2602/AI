@@ -121,7 +121,7 @@ class Pacman(MovableObject):
         return Direction.NONE
 
     def automatic_move(self, in_direction: Direction):
-        print(in_direction)
+        # print(in_direction)
         if in_direction == Direction.UP:
             self.set_position(self.x, self.y - 1)
         elif in_direction == Direction.DOWN:
@@ -333,7 +333,6 @@ class GameRenderer:
         self._hero = None
 
     def kill_pacman(self):
-        self._hero.set_position(32, 32)
         self._hero.next_target = None
         self._hero.location_queue.clear()
         self._hero.set_direction(Direction.NONE)
