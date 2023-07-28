@@ -333,10 +333,10 @@ class GameRenderer:
         self._hero = None
 
     def kill_pacman(self):
-        # self._hero.set_position(32, 32)
-        # self._hero.next_target = None
-        # self._hero.location_queue.clear()
-        # self._hero.set_direction(Direction.NONE)
+        self._hero.set_position(32, 32)
+        self._hero.next_target = None
+        self._hero.location_queue.clear()
+        self._hero.set_direction(Direction.NONE)
         self.end_game()
 
     def display_text(self, text, in_position=(32, 0), in_size=25):
