@@ -25,7 +25,7 @@ def get_ghost_neighbors(pos, maze):
 
     for dx, dy in directions:
         x, y = pos[0] + dx, pos[1] + dy
-        if 0 <= x < len(maze) and 0 <= y < len(maze[0]) and (maze[x][y] != 1):
+        if 0 <= x < len(maze) and 0 <= y < len(maze[0]) and maze[x][y] != 1:
             neighbors.append((x, y))
 
     return neighbors
@@ -75,9 +75,11 @@ def astar(maze, start, goal):
     queue = [(0, start, 0)]  # Using a queue: (total_cost, current_node, score)
     visited = set()
     came_from = {}
+    res = []
 
     while queue:
         distance, current_node, score = queue.pop(0)
+        res.append(current_node)
 
         if current_node == goal:
             return reconstruct_path(came_from, current_node)
@@ -91,16 +93,18 @@ def astar(maze, start, goal):
                     queue.append((total_cost, neighbor, score - 1))
         queue.sort(key=lambda x: x[0], reverse=False)
 
-    return False
+    return res
 
 
 def ghostAstart(maze, start, goal):
     queue = [(0, start, 0)]  # Using a queue: (total_cost, current_node, score)
     visited = set()
     came_from = {}
+    res = []
 
     while queue:
         distance, current_node, score = queue.pop(0)
+        res.append(current_node)
 
         if current_node == goal:
             return reconstruct_path(came_from, current_node)
@@ -114,30 +118,28 @@ def ghostAstart(maze, start, goal):
                     queue.append((total_cost, neighbor, score - 1))
         queue.sort(key=lambda x: x[0], reverse=False)
 
-    return False
+    return res
 
 
 def changePath(maze, pacmanPos, ghosts):
-    check = False
     moveablePos = get_neighbors(pacmanPos, maze)
     for pos in moveablePos:
         if check_safe_move(pos, ghosts) == True:
-            check = True
             pacmanPos = pos
             break
-    if check:
-        return pacmanPos
-    else:
-        return -1
+    return pacmanPos
 
 
 def ghostMove(maze, pacmanPos, ghosts):
     ghostsPos = []
     for ghost in ghosts:
         ghostPath = ghostAstart(maze, ghost, pacmanPos)
-        maze[ghostPath[0][0]][ghostPath[0][1]] = 0
-        maze[ghostPath[1][0]][ghostPath[1][1]] = 3
-        ghostsPos.append(ghostPath[1])
+        if (len(ghostPath) > 1): 
+            maze[ghostPath[0][0]][ghostPath[0][1]] = 0
+            maze[ghostPath[1][0]][ghostPath[1][1]] = 3
+            ghostsPos.append(ghostPath[1])
+        else:
+            ghostsPos.append(ghostPath[0])
     return maze, ghostsPos
 
 
@@ -147,70 +149,81 @@ def eatFood(maze, pacmanPos, foods):
         maze[pacmanPos[0]][pacmanPos[1]] = 0
     return maze, foods
 
+def changeGoal(maze, pacmanPos, foods, ghosts):
+    foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
+    res = foods[0]
+
+    for food in foods:
+        path = astar(maze, pacmanPos, food)
+        if (path[len(path) - 1] == food):
+            res = food
+            break
+    return res
 
 def handleAStar(maze, start, goal, foods, ghosts):
     pacmanPos = start
     pathSolution = [pacmanPos]
     ghostsPath = [ghosts]
-    while pacmanPos != goal:
-        pacmanPath = astar(maze, pacmanPos, goal)
-        while pacmanPath == False:
-            newPacmanPos = changePath(maze, pacmanPos, ghosts)
-            if newPacmanPos == -1:
-                return maze, pathSolution, foods, ghostsPath, "dead"
-
-            maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
-            ghostsPath.append(ghosts)
-            pathSolution.append(newPacmanPos)
-            pacmanPath = astar(maze, newPacmanPos, goal)
-            pacmanPos = newPacmanPos
-            maze, foods = eatFood(maze, pacmanPos, foods)
-
-        pacmanPos = pacmanPath.pop(0)
-        maze, foods = eatFood(maze, pacmanPos, foods)
-        newPacmanPos = pacmanPath[0]
-        moveablePos = get_neighbors(pacmanPos, maze)
-        if (newPacmanPos in moveablePos) and (check_safe_move(newPacmanPos, ghosts)):
-            maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
-            ghostsPath.append(ghosts)
-            pacmanPos = pacmanPath.pop(0)
-            pathSolution.append(pacmanPos)
-        else:
-            newPacmanPos = changePath(maze, pacmanPos, ghosts)
-            if newPacmanPos == -1:
-                return maze, pathSolution, foods, ghostsPath, "dead"
-
-            maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
-            ghostsPath.append(ghosts)
-
-            pathSolution.append(newPacmanPos)
-            pacmanPos = newPacmanPos
-            maze, foods = eatFood(maze, pacmanPos, foods)
-
+    while True:
+        if (len(foods) == 0):
+            break
         if pacmanPos == goal:
             maze, foods = eatFood(maze, pacmanPos, foods)
+            if (len(foods) == 0):
+                break
 
-    return maze, pathSolution, foods, ghostsPath, "alive"
+        goal = changeGoal(maze, pacmanPos, foods, ghosts)
+        pacmanPath = astar(maze, pacmanPos, goal)
+
+        if (len(pacmanPath) == 1):
+            print("HEHE", pacmanPath)
+            maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
+            ghostsPath.append(ghosts)
+            pacmanPos = pacmanPath[0]
+            pathSolution.append(pacmanPos)
+            maze, foods = eatFood(maze, pacmanPos, foods)
+
+        else:
+            pacmanPos = pacmanPath.pop(0)
+            maze, foods = eatFood(maze, pacmanPos, foods)
+            newPacmanPos = pacmanPath[0]
+            moveablePos = get_neighbors(pacmanPos, maze)
+            if (newPacmanPos in moveablePos) and (check_safe_move(newPacmanPos, ghosts)):
+                maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
+                ghostsPath.append(ghosts)
+                pacmanPos = newPacmanPos
+                pathSolution.append(pacmanPos)
+            else:
+                maze, ghosts = ghostMove(maze, pacmanPos, ghosts)
+                ghostsPath.append(ghosts)
+                pacmanPos = changePath(maze, pacmanPos, ghosts)
+                maze, foods = eatFood(maze, pacmanPos, foods)
+                pathSolution.append(pacmanPos)
+                if (pacmanPos in ghosts):
+                    return maze, pathSolution, foods, ghosts, ghostsPath, "dead"
+
+    return maze, pathSolution, foods, ghosts, ghostsPath, "alive"
 
 
 def handleMainLv4(maze, start):
     ghosts = find_object(maze, 3)
     foods = find_object(maze, 2)
     pacmanPos = tuple(start)
-    pacmanRes = []
-    ghostsRes = []
+    pacmanRes = [start]
+    ghostsRes = [ghosts]
 
     while foods:
         foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
-        maze, pacmanPath, foods, ghostsPath, status = handleAStar(
+        maze, pacmanPath, foods, ghosts, ghostsPath, status = handleAStar(
             maze, pacmanPos, foods[0], foods, ghosts
         )
         pacmanPos = pacmanPath[len(pacmanPath) - 1]
-        pacmanRes += pacmanPath
-        ghostsRes += ghostsPath
+        pacmanRes += pacmanPath[1:]
+        ghostsRes += ghostsPath[1:]
         if status == "dead":
-            print("dead")
             break
-    print("PAC", pacmanRes)
-    print("GHO", ghostsRes)
+    
+    print("PACMAN", pacmanRes)
+    print("GHOSTS", ghostsRes)
+    
     return pacmanRes, ghostsRes
