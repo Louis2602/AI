@@ -8,9 +8,7 @@ class PathFinder:
         self.start = pacman_pos
 
     def get_path_lv1_lv2(self) -> object:
-        print(self.maze, self.start)
         res = handleLevel1_2(self.maze, self.start)
-        # return [(sub[1], sub[0]) for sub in res]
         return res
 
     def get_path_lv4(self):

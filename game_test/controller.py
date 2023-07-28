@@ -16,9 +16,6 @@ class PacmanGameController:
             "images/ghost_blue.png",
         ]
         self.read_maze()
-        # self.pacman_path, self.ghost_path = Pathfinder(
-        #     self.maze, self.pacman_pos
-        # ).get_path_lv4()
         self.search = PathFinder(self.maze, self.pacman_pos)
 
     def read_maze(self):

@@ -6,14 +6,12 @@ def heuristic(node, goal):
 def get_neighbors(pos, maze):
     neighbors = []
     directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]  # Right, Down, Left, Up
-    print(pos)
     for dx, dy in directions:
         x, y = pos[0] + dx, pos[1] + dy
         if (
             0 <= x < len(maze)
             and 0 <= y < len(maze[0])
-            and (maze[x][y] == 0
-            or maze[x][y] == 2)
+            and (maze[x][y] == 0 or maze[x][y] == 2)
         ):
             neighbors.append((x, y))
 
@@ -27,11 +25,13 @@ def reconstruct_path(came_from, current):
         path.append(current)
     return list(reversed(path))
 
+
 def find_food(maze):
     for i in range(len(maze)):
         for j in range(len(maze[0])):
             if maze[i][j] == 2:
-                return (i,j)
+                return (i, j)
+
 
 def solve(maze, start):
     start_node = tuple(start)
@@ -54,9 +54,12 @@ def solve(maze, start):
                     total_cost = 1 + heuristic(neighbor, goal_node)
                     came_from[neighbor] = current_node
                     queue.append((total_cost, neighbor, score - 1))
-        queue.sort(key=lambda x: x[2], reverse=True)  # Sort in descending order based on score
+        queue.sort(
+            key=lambda x: x[2], reverse=True
+        )  # Sort in descending order based on score
 
     return []
+
 
 def handleLevel1_2(maze, start):
     return solve(maze, start)
