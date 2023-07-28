@@ -30,6 +30,10 @@ if __name__ == "__main__":
     #     start = time.time()
     #     pacman_path, monster_path, finish_state = lvl3.level3(image_path)
     #     execution_time = get_elapsed_time(start, time.time())
+    if level == 3:
+        start = time.time()
+        pacman_path, ghosts_path = pacman_game.search.get_path_lv3()
+        execution_time = time.time() - start
 
     if level == 4:
         start = time.time()
