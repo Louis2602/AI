@@ -333,6 +333,7 @@ class GameRenderer:
         self._hero = None
 
     def kill_pacman(self):
+        self._hero.set_position(32, 32)
         self._hero.next_target = None
         self._hero.location_queue.clear()
         self._hero.set_direction(Direction.NONE)

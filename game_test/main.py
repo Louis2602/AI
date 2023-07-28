@@ -1,7 +1,6 @@
-from game import Pacman, Cookie, Wall, Ghost, GameRenderer, GameObject
-from utils import GhostBehaviour, draw_path
+from game import Pacman, Cookie, Wall, Ghost, GameRenderer
 from controller import PacmanGameController
-from utils import translate_maze_to_screen, translate_screen_to_maze
+from utils import translate_maze_to_screen
 import time
 
 
@@ -17,21 +16,20 @@ if __name__ == "__main__":
     maze_name, level = get_maze_path()
 
     # speed = int(input("Input game speed (ms): "))
+    pacman_game = PacmanGameController(maze_name)
+    size = pacman_game.size
+    game_renderer = GameRenderer(size[1] * unified_size, size[0] * unified_size)
 
-    # if level == 1 or level == 2:
-    #     start = time.time()
-    #     pacman_path = level12_astar.A_star_run(image_path)
-    #     monster_path = []
-    #     execution_time = get_elapsed_time(start, time.time())
+    if level == 1 or level == 2:
+        start = time.time()
+        pacman_path = pacman_game.search.get_path_lv1_lv2()
+        ghosts_path = []
+        execution_time = time.time() - start
 
     # elif level == 3:
     #     start = time.time()
     #     pacman_path, monster_path, finish_state = lvl3.level3(image_path)
     #     execution_time = get_elapsed_time(start, time.time())
-
-    pacman_game = PacmanGameController(maze_name)
-    size = pacman_game.size
-    game_renderer = GameRenderer(size[1] * unified_size, size[0] * unified_size)
 
     if level == 4:
         start = time.time()
@@ -73,8 +71,8 @@ if __name__ == "__main__":
         pacman = Pacman(
             game_renderer,
             pacman_game,
-            unified_size,
-            unified_size,
+            pacman_game.pacman_pos[0] * unified_size,
+            pacman_game.pacman_pos[1] * unified_size,
             unified_size,
             pacman_path,
         )
