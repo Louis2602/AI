@@ -121,7 +121,7 @@ class Pacman(MovableObject):
         return Direction.NONE
 
     def automatic_move(self, in_direction: Direction):
-        print(in_direction)
+        # print(in_direction)
         if in_direction == Direction.UP:
             self.set_position(self.x, self.y - 1)
         elif in_direction == Direction.DOWN:

@@ -1,4 +1,4 @@
-from astar import astar
+from level1_level2 import handleLevel1_2
 from level4 import handleMainLv4
 
 
@@ -7,8 +7,9 @@ class PathFinder:
         self.maze = maze
         self.start = pacman_pos
 
-    def get_path_a_star(self, start, goal) -> object:
-        res = astar(self.maze, start, goal)
+    def get_path_lv1_lv2(self) -> object:
+        print(self.maze, self.start)
+        res = handleLevel1_2(self.maze, self.start)
         # return [(sub[1], sub[0]) for sub in res]
         return res
 
