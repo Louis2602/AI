@@ -226,6 +226,7 @@ class Cookie(GameObject):
 class GameRenderer:
     def __init__(self, in_width: int, in_height: int):
         pygame.init()
+        self._level = 1
         self._width = in_width
         self._height = in_height
         self._screen = pygame.display.set_mode((in_width, in_height))
@@ -240,30 +241,30 @@ class GameRenderer:
         self._hero: Pacman = None
         self._score = 0
         self._score_cookie_pickup = 10
-        self._current_mode = GhostBehaviour.NONE  # default
-        self._current_level = 1  # default
-        self._mode_switch_event = pygame.USEREVENT + 1  # custom event
         self._pakupaku_event = pygame.USEREVENT + 3
 
     def tick(self, in_fps: int):
         black = (0, 0, 0)
 
-        self.handle_level()
         pygame.time.set_timer(self._pakupaku_event, 200)  # open close mouth
         while not self._done:
             for game_object in self._game_objects:
                 game_object.tick()
                 game_object.draw()
 
-            self.display_text(f"[Score: {self._score}]")
+            self.display_text(f"[Score: {self._score} - Level: {self._level}]")
 
             if self._hero is None:
-                self.display_text(
-                    "PACMAN DIED",
-                    (self._width / 2, 0),
-                )
+                font = pygame.font.SysFont("Arial", 50)
+                text = font.render("PACMAN DIED", True, (255, 255, 255))
+                text_rect = text.get_rect(center=(self._width / 2, self._height / 2))
+                self._screen.blit(text, text_rect)
             if self.get_won():
-                self.display_text("PACMAN WON", (self._width / 2, 0))
+                font = pygame.font.SysFont("Arial", 50)
+                text = font.render("PACMAN WON", True, (255, 255, 255))
+                text_rect = text.get_rect(center=(self._width / 2, self._height / 2))
+                self._screen.blit(text, text_rect)
+
             pygame.display.flip()
             self._clock.tick(in_fps)
             self._screen.fill(black)
@@ -271,16 +272,6 @@ class GameRenderer:
 
         print("Game over")
         print("SCORE:", self._score)
-
-    def handle_level(self):
-        if self._current_level == 1:
-            self.set_current_mode(GhostBehaviour.NONE)
-        elif self._current_level == 2:
-            self.set_current_mode(GhostBehaviour.IDLE)
-        elif self._current_level == 3:
-            self.set_current_mode(GhostBehaviour.SCATTER)
-        elif self._current_level == 4:
-            self.set_current_mode(GhostBehaviour.CHASE)
 
     def add_game_object(self, obj: GameObject):
         self._game_objects.append(obj)
@@ -305,30 +296,21 @@ class GameRenderer:
     def get_hero_position(self):
         return self._hero.get_position() if self._hero != None else (1, 1)
 
-    def set_current_mode(self, in_mode: GhostBehaviour):
-        self._current_mode = in_mode
-
-    def set_current_level(self, in_level):
-        self._current_level = in_level
-
-    def get_current_mode(self):
-        return self._current_mode
-
     def end_game(self):
         if self._hero in self._game_objects:
             self._game_objects.remove(self._hero)
         self._hero = None
 
     def kill_pacman(self):
-        self._hero.set_position(32, 32)
-        self._hero.next_target = None
-        self._hero.location_queue.clear()
-        self._hero.set_direction(Direction.NONE)
+        if self._hero:
+            self._hero.next_target = None
+            self._hero.location_queue.clear()
+            self._hero.set_direction(Direction.NONE)
         self.end_game()
 
     def display_text(self, text, in_position=(32, 0), in_size=25):
         font = pygame.font.SysFont("Arial", in_size)
-        text_surface = font.render(text, False, (255, 255, 255))
+        text_surface = font.render(text, True, (255, 255, 255))
         self._screen.blit(text_surface, in_position)
 
     def add_wall(self, obj: Wall):
@@ -351,13 +333,13 @@ class GameRenderer:
         self.add_game_object(in_hero)
         self._hero = in_hero
 
+    def set_level(self, level):
+        self._level = level
+
     def _handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self._done = True
-
-            if event.type == self._mode_switch_event:
-                self.handle_level()
 
             if event.type == self._pakupaku_event:
                 if self._hero is None:

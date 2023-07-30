@@ -75,7 +75,7 @@ if __name__ == "__main__":
         )
 
         game_renderer.add_hero(pacman)
-        game_renderer.set_current_level(level)
+        game_renderer.set_level(level)
         start = time.time()
         game_renderer.tick(speed)
         execution_time = time.time() - start
