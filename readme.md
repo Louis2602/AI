@@ -1,4 +1,18 @@
 # PROJECT 01: AI PACMAN SELF FINDING PATH
+## Run Game
+1. Install requirement library: `pygame`
+```
+pip install -r requirements.txt
+```
+2. Go to `source folder` and run this command in terminal:
+```python
+py main.py or python3 main.py
+```
+3. Input necessary information such as:
+    - Level of game
+    - Map
+    - Game speed (ms)
+4. Watch the pacman collects all the cookies as much as possible.
 ## Project description
 You  are  given  a  file  that  describes  Pac-man  World.  Suggest  or  implement  learned algorithms to assist Pac-Man in finding food without getting killed by monsters. In the game Pac-Man, both Pac-Man and the monsters are constrained to moving in four directions: left, right, up, and down. They are not able to move through walls. The game is divided into four distinct levels, and each level has its own set of rules. 
 - Level  1:  Pac-Man  is  aware  of  the  food's  position  on  the  map,  and  there  are  no monsters present. There is only one food item on the map. 

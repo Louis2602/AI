@@ -121,7 +121,6 @@ class Pacman(MovableObject):
         return Direction.NONE
 
     def automatic_move(self, in_direction: Direction):
-        # print(in_direction)
         if in_direction == Direction.UP:
             self.set_position(self.x, self.y - 1)
         elif in_direction == Direction.DOWN:
@@ -153,12 +152,11 @@ class Pacman(MovableObject):
             self._renderer.set_won()
 
     def handle_ghosts(self):
-        collision_rect = pygame.Rect(self.x, self.y, self._size, self._size)
+        pacman_pos = (self.x, self.y)
         ghosts = self._renderer.get_ghosts()
         game_objects = self._renderer.get_game_objects()
         for ghost in ghosts:
-            collides = collision_rect.colliderect(ghost.get_shape())
-            if collides and ghost in game_objects:
+            if pacman_pos == ghost.get_position() and ghost in game_objects:
                 if not self._renderer.get_won():
                     self._renderer.kill_pacman()
 
@@ -224,9 +222,6 @@ class Cookie(GameObject):
     def __init__(self, in_surface, x, y):
         super().__init__(in_surface, x, y, 4, (255, 255, 0), True)
 
-    def get_position(self):
-        return (self.x, self.y)
-
 
 class GameRenderer:
     def __init__(self, in_width: int, in_height: int):
@@ -264,20 +259,18 @@ class GameRenderer:
 
             if self._hero is None:
                 self.display_text(
-                    "YOU DIED",
-                    (self._width / 2 - self._width / 4, self._height / 2),
-                    50,
+                    "PACMAN DIED",
+                    (self._width / 2, 0),
                 )
             if self.get_won():
-                self.display_text(
-                    "YOU WON", (self._width / 2 - self._width / 4, self._height / 2), 50
-                )
+                self.display_text("PACMAN WON", (self._width / 2, 0))
             pygame.display.flip()
             self._clock.tick(in_fps)
             self._screen.fill(black)
             self._handle_events()
 
         print("Game over")
+        print("SCORE:", self._score)
 
     def handle_level(self):
         if self._current_level == 1:
@@ -311,12 +304,6 @@ class GameRenderer:
 
     def get_hero_position(self):
         return self._hero.get_position() if self._hero != None else (1, 1)
-
-    def get_cookie_position(self):
-        cookie_position = self.get_hero_position()
-        if len(self._cookies) != 0:
-            cookie_position = self._cookies[0].get_position()
-        return cookie_position
 
     def set_current_mode(self, in_mode: GhostBehaviour):
         self._current_mode = in_mode
