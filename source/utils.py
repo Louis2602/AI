@@ -12,15 +12,6 @@ class Direction(Enum):
 
 class ScoreType(Enum):
     COOKIE = 10
-    POWERUP = 50
-    GHOST = 400
-
-
-class GhostBehaviour(Enum):
-    CHASE = 1
-    SCATTER = 2
-    NONE = 3
-    IDLE = 4
 
 
 def translate_screen_to_maze(in_coords, in_size=32):

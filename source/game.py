@@ -2,7 +2,6 @@ import pygame
 from utils import (
     Direction,
     ScoreType,
-    GhostBehaviour,
 )
 
 
