@@ -167,10 +167,15 @@ def changeGoal(maze, pacmanPos, foods, ghosts, invisibility, mazePacman):
     foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
     invisibility1 = [coord for coord in invisibility if mazePacman[coord[0]][coord[1]] == 4]
     invisibility1 = sorted(invisibility1, key=lambda inv: heuristic(pacmanPos, inv))
+    print("pacmanPos", pacmanPos)
+    print("invisibility1")
+    print(invisibility1)
     if foods:
         res = foods[0]
-    else:
+    elif invisibility1:
         res = invisibility1[0]
+    else:
+       return 0; 
     return res
 
 def initMazePacmanView(maze):
@@ -186,7 +191,7 @@ def initMazePacmanView(maze):
                 mazePacman[i][j] = 1
     return mazePacman
 
-def updateMazePacman(maze, mazePacman, pacmanPos):
+def updateMazePacman(maze, mazePacman, pacmanPos, mazeFood):
     rows = len(maze)
     cols = len(maze[0])
 
@@ -194,9 +199,18 @@ def updateMazePacman(maze, mazePacman, pacmanPos):
         for j in range(cols):
             if abs(i - pacmanPos[0]) + abs(j - pacmanPos[1]) <= 3:
                 mazePacman[i][j] = maze[i][j]
+
+    for i in range(rows):
+        for j in range(cols):
+            if mazePacman[i][j] != 4 and mazeFood[i][j] == 2 and mazePacman[i][j] != 0:
+                mazePacman[i][j] = mazeFood[i][j]
     return mazePacman
 
-def handleAStar(maze, start, goal, foods, ghosts, countFood, invisibility, mazePacman):
+def initfoodmaze(maze):
+    mazeFood = [[maze[row][col] for col in range(len(maze[0]))] for row in range(len(maze))]
+    return mazeFood
+
+def handleAStar(maze, start, goal, foods, ghosts, countFood, invisibility, mazePacman, mazeFood):
     pacmanPos = start
     pathSolution = [pacmanPos]
     ghostsPath = [ghosts]
@@ -204,7 +218,7 @@ def handleAStar(maze, start, goal, foods, ghosts, countFood, invisibility, mazeP
         foods = find_object(mazePacman, 2)
         print("pacmanPos: ", pacmanPos)
         #print("mazePacman: ", mazePacman)
-        print(countFood)
+        # print(countFood)
         if (countFood == 0):
             break
         if pacmanPos == goal:
@@ -213,16 +227,18 @@ def handleAStar(maze, start, goal, foods, ghosts, countFood, invisibility, mazeP
                 break
 
         goal = changeGoal(maze, pacmanPos, foods, ghosts, invisibility, mazePacman)
-        print("goal1", goal)
-        print("food", foods)
+        # print("goal1", goal)
+        # print("food", foods)
+        if goal == 0:
+            return maze, pathSolution, foods, ghosts, ghostsPath, "dead", countFood, mazePacman
         pacmanPath = astar(maze, pacmanPos, goal)
-        print(pacmanPath)
+        # print(pacmanPath)
         if (len(pacmanPath) == 1):
             
             maze, ghosts, mazePacman = ghostMove(maze, pacmanPos, ghosts, mazePacman)
             ghostsPath.append(ghosts)
             pacmanPos = pacmanPath[0]
-            mazePacman = updateMazePacman(maze, mazePacman, pacmanPos)
+            mazePacman = updateMazePacman(maze, mazePacman, pacmanPos, mazeFood)
             pathSolution.append(pacmanPos)
             maze, foods, mazePacman, countFood = eatFood(maze, pacmanPos, foods, countFood, mazePacman)
         else:
@@ -234,13 +250,13 @@ def handleAStar(maze, start, goal, foods, ghosts, countFood, invisibility, mazeP
                 maze, ghosts, mazePacman = ghostMove(maze, pacmanPos, ghosts, mazePacman)
                 ghostsPath.append(ghosts)
                 pacmanPos = newPacmanPos
-                mazePacman = updateMazePacman(maze, mazePacman, pacmanPos)
+                mazePacman = updateMazePacman(maze, mazePacman, pacmanPos, mazeFood)
                 pathSolution.append(pacmanPos)
             else:
                 maze, ghosts, mazePacman = ghostMove(maze, pacmanPos, ghosts, mazePacman)
                 ghostsPath.append(ghosts)
                 pacmanPos = changePath(maze, pacmanPos, ghosts, mazePacman)
-                mazePacman = updateMazePacman(maze, mazePacman, pacmanPos)
+                mazePacman = updateMazePacman(maze, mazePacman, pacmanPos, mazeFood)
                 maze, foods, mazePacman, countFood = eatFood(maze, pacmanPos, foods, countFood, mazePacman)
                 pathSolution.append(pacmanPos)
                 if (pacmanPos in ghosts):
@@ -251,11 +267,12 @@ def handleAStar(maze, start, goal, foods, ghosts, countFood, invisibility, mazeP
 
 
 def handleMainLv3(maze, start):
-   
+    mazeFood = initfoodmaze(maze)
+    print("mazeFood", mazeFood)
     mazePacman = initMazePacmanView(maze)
     pacmanPos = tuple(start)
     pacmanRes = [start]
-    mazePacman = updateMazePacman(maze, mazePacman, pacmanPos)
+    mazePacman = updateMazePacman(maze, mazePacman, pacmanPos, mazeFood)
 
     ghosts = find_object(maze, 3)
     ghostsRes = [ghosts]
@@ -276,7 +293,7 @@ def handleMainLv3(maze, start):
             value = invisibility[0]
 
         maze, pacmanPath, foods, ghosts, ghostsPath, status, countFood, mazePacman = handleAStar(
-            maze, pacmanPos, value, foods, ghosts, countFood, invisibility, mazePacman
+            maze, pacmanPos, value, foods, ghosts, countFood, invisibility, mazePacman, mazeFood
         )
         print(1)
         pacmanPos = pacmanPath[len(pacmanPath) - 1]
