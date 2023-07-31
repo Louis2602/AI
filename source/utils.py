@@ -11,7 +11,8 @@ class Direction(Enum):
 
 
 class ScoreType(Enum):
-    COOKIE = 10
+    COOKIE = 20
+    STEP = -1
 
 
 def translate_screen_to_maze(in_coords, in_size=32):

@@ -102,6 +102,7 @@ class Pacman(MovableObject):
     def reached_target(self):
         if (self.x, self.y) == self.next_target:
             self.next_target = self.get_next_location()
+            self._renderer.add_score(ScoreType.STEP)
         self.current_direction = self.calculate_direction_to_next_target()
 
     def calculate_direction_to_next_target(self) -> Direction:
@@ -241,7 +242,7 @@ class GameRenderer:
         self._ghosts = []
         self._hero: Pacman = None
         self._score = 0
-        self._score_cookie_pickup = 10
+        self._score_cookie_pickup = 20
         self._pakupaku_event = pygame.USEREVENT + 3
 
     def tick(self, in_fps: int):
