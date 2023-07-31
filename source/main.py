@@ -6,7 +6,7 @@ import time
 
 def game_initialize():
     level = int(input("Input level of game (1/2/3/4): "))
-    map = input("Choose map (1-5): ")
+    map = input("Choose map (1/2): ")
     maze_name = f"../input/level{level}_map{map}.txt"
     speed = int(input("Input game speed (ms): "))
     return maze_name, level, speed
@@ -22,15 +22,18 @@ if __name__ == "__main__":
     if level == 1 or level == 2:
         start = time.time()
         pacman_path = pacman_game.search.get_path_lv1_lv2()
+        # print("Path length :", len(pacman_path))
         ghosts_path = []
         path_calculation_time = time.time() - start
     elif level == 3:
         start = time.time()
         pacman_path, ghosts_path = pacman_game.search.get_path_lv3()
+        print("Path length :", len(pacman_path))
         path_calculation_time = time.time() - start
     elif level == 4:
         start = time.time()
         pacman_path, ghosts_path, status = pacman_game.search.get_path_lv4()
+        print("Path length :", len(pacman_path))
         pacman_game.set_status(status)
         path_calculation_time = time.time() - start
 
