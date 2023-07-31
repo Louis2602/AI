@@ -5,7 +5,7 @@ from utils import get_maze
 class PacmanGameController:
     def __init__(self, maze_name):
         self.maze, self.size, self.pacman_pos = get_maze(maze_name)
-
+        self._status = "alive"
         self.cookie_spaces = []
         self.reachable_spaces = []
         self.ghost_spawns = []
@@ -17,6 +17,8 @@ class PacmanGameController:
         ]
         self.read_maze()
         self.search = PathFinder(self.maze, self.pacman_pos)
+    def set_status(self, status):
+        self._status = status
 
     def read_maze(self):
         for row in range(self.size[0]):

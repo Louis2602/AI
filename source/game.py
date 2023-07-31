@@ -107,6 +107,8 @@ class Pacman(MovableObject):
     def calculate_direction_to_next_target(self) -> Direction:
         if self.next_target is None:
             self.next_target = self.get_next_location()
+            if (self.next_target is None and self.game_controller._status == 'blocked' ):
+                self._renderer.end_game()
             return Direction.NONE
 
         diff_x = self.next_target[0] - self.x
@@ -255,7 +257,7 @@ class GameRenderer:
 
             if self._hero is None:
                 font = pygame.font.SysFont("Arial", 50)
-                text = font.render("PACMAN DIED", True, (255, 255, 255))
+                text = font.render("PACMAN LOSE", True, (255, 255, 255))
                 text_rect = text.get_rect(center=(self._width / 2, self._height / 2))
                 self._screen.blit(text, text_rect)
             if self.get_won():
