@@ -22,7 +22,6 @@ if __name__ == "__main__":
     if level == 1 or level == 2:
         start = time.time()
         pacman_path = pacman_game.search.get_path_lv1_lv2()
-        # print("Path length :", len(pacman_path))
         ghosts_path = []
         path_calculation_time = time.time() - start
     elif level == 3:
@@ -33,7 +32,6 @@ if __name__ == "__main__":
     elif level == 4:
         start = time.time()
         pacman_path, ghosts_path, status = pacman_game.search.get_path_lv4()
-        print("Path length :", len(pacman_path))
         pacman_game.set_status(status)
         path_calculation_time = time.time() - start
 
