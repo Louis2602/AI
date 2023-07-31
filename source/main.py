@@ -26,7 +26,8 @@ if __name__ == "__main__":
         path_calculation_time = time.time() - start
     elif level == 3:
         start = time.time()
-        pacman_path, ghosts_path = pacman_game.search.get_path_lv3()
+        pacman_path, ghosts_path, status = pacman_game.search.get_path_lv4()
+        pacman_game.set_status(status)
         path_calculation_time = time.time() - start
     elif level == 4:
         start = time.time()

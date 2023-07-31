@@ -14,7 +14,7 @@ class PathFinder:
 
     def get_path_lv3(self):
         pacman_path, ghost_path = handleMainLv3(self.maze, self.start)
-        return pacman_path, ghost_path
+        return pacman_path, ghost_path, status
 
     def get_path_lv4(self):
         pacman_path, ghost_path, status = handleMainLv4(self.maze, self.start)
