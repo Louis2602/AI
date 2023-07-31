@@ -77,11 +77,9 @@ def astar(maze, start, goal):
     queue = [(0, start, 0)]  # Using a queue: (total_cost, current_node, score)
     visited = set()
     came_from = {}
-    res = []
 
     while queue:
         distance, current_node, score = queue.pop(0)
-        res.append(current_node)
 
         if current_node == goal:
             return reconstruct_path(came_from, current_node)
@@ -95,7 +93,7 @@ def astar(maze, start, goal):
                     queue.append((total_cost, neighbor, score - 1))
         queue.sort(key=lambda x: x[0], reverse=False)
 
-    return res 
+    return reconstruct_path(came_from, current_node) 
 
 
 def ghostAstart(maze, start, goal):
@@ -230,7 +228,7 @@ def handleAStar(maze, start, goal, foods, ghosts, countFood, invisibility, mazeP
         # print("goal1", goal)
         # print("food", foods)
         if goal == 0:
-            return maze, pathSolution, foods, ghosts, ghostsPath, "dead", countFood, mazePacman
+            return maze, pathSolution, foods, ghosts, ghostsPath, "blocked", countFood, mazePacman
         pacmanPath = astar(maze, pacmanPos, goal)
         # print(pacmanPath)
         if (len(pacmanPath) == 1):
@@ -283,26 +281,24 @@ def handleMainLv3(maze, start):
     invisibility = find_object(mazePacman, 4)
     foods = find_object(mazePacman, 2)
     
-    while countFood:
-        foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
-        invisibility = sorted(invisibility, key=lambda inv: heuristic(pacmanPos, inv))
-        
-        if foods:
-            value = foods[0]
-        else:
-            value = invisibility[0]
+   
+    foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
+    invisibility = sorted(invisibility, key=lambda inv: heuristic(pacmanPos, inv))
+    
+    if foods:
+        value = foods[0]
+    else:
+        value = invisibility[0]
 
-        maze, pacmanPath, foods, ghosts, ghostsPath, status, countFood, mazePacman = handleAStar(
-            maze, pacmanPos, value, foods, ghosts, countFood, invisibility, mazePacman, mazeFood
-        )
-        print(1)
-        pacmanPos = pacmanPath[len(pacmanPath) - 1]
-        pacmanRes += pacmanPath[1:]
-        ghostsRes += ghostsPath[1:]
-        if status == "dead":
-            break
+    maze, pacmanPath, foods, ghosts, ghostsPath, status, countFood, mazePacman = handleAStar(
+        maze, pacmanPos, value, foods, ghosts, countFood, invisibility, mazePacman, mazeFood
+    )
+    print(1)
+    pacmanPos = pacmanPath[len(pacmanPath) - 1]
+    pacmanRes += pacmanPath[1:]
+    ghostsRes += ghostsPath[1:]
     
     print("PACMAN", pacmanRes)
     print("GHOSTS", ghostsRes)
     
-    return pacmanRes, ghostsRes
+    return pacmanRes, ghostsRes, status
