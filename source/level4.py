@@ -94,15 +94,13 @@ def astar(maze, start, goal):
     return reconstruct_path(came_from, current_node)
 
 
-def ghostAstart(maze, start, goal):
+def ghostAstar(maze, start, goal):
     queue = [(0, start, 0)]  # Using a queue: (total_cost, current_node, score)
     visited = set()
     came_from = {}
-    res = []
 
     while queue:
         distance, current_node, score = queue.pop(0)
-        res.append(current_node)
 
         if current_node == goal:
             return reconstruct_path(came_from, current_node)
@@ -116,7 +114,7 @@ def ghostAstart(maze, start, goal):
                     queue.append((total_cost, neighbor, score - 1))
         queue.sort(key=lambda x: x[0], reverse=False)
 
-    return res
+    return reconstruct_path(came_from, current_node)
 
 
 def changePath(maze, pacmanPos, ghosts):
@@ -131,7 +129,7 @@ def changePath(maze, pacmanPos, ghosts):
 def ghostMove(maze, pacmanPos, ghosts):
     ghostsPos = []
     for ghost in ghosts:
-        ghostPath = ghostAstart(maze, ghost, pacmanPos)
+        ghostPath = ghostAstar(maze, ghost, pacmanPos)
         if len(ghostPath) > 1:
             maze[ghostPath[0][0]][ghostPath[0][1]] = 0
             maze[ghostPath[1][0]][ghostPath[1][1]] = 3
@@ -242,19 +240,6 @@ def handleMainLv4(maze, start):
     pacmanPos = tuple(start)
     pacmanRes = [start]
     ghostsRes = [ghosts]
-
-    
-
-    # while foods:
-    #     foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
-    #     maze, pacmanPath, foods, ghosts, ghostsPath, status = handleAStar(
-    #         maze, pacmanPos, foods[0], foods, ghosts
-    #     )
-    #     pacmanPos = pacmanPath[len(pacmanPath) - 1]
-    #     pacmanRes += pacmanPath[1:]
-    #     ghostsRes += ghostsPath[1:]
-    #     if status == "dead":
-    #         break
 
     foods = sorted(foods, key=lambda food: heuristic(pacmanPos, food))
     maze, pacmanPath, foods, ghosts, ghostsPath, status = handleAStar(maze, pacmanPos, foods[0], foods, ghosts)
